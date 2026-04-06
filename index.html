@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>TOEFL iBT — Build a Sentence Practice</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+    margin: 0;
+    background: #f3f4f6;
+    color: #1f2937;
+  }
+  header {
+    background: #1e3a8a;
+    color: white;
+    padding: 14px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 6px rgba(0,0,0,.15);
+  }
+  header h1 { margin: 0; font-size: 18px; font-weight: 600; }
+  #timer {
+    background: #fbbf24;
+    color: #1f2937;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-family: "SF Mono", Menlo, monospace;
+    font-size: 16px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 24px auto;
+    padding: 0 20px;
+  }
+  .card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 18px;
+    box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  }
+  .progress {
+    font-size: 13px;
+    color: #6b7280;
+    margin-bottom: 8px;
+  }
+  .person-label {
+    font-weight: 700;
+    color: #1e3a8a;
+    margin-bottom: 6px;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .person1-text {
+    font-size: 16px;
+    line-height: 1.6;
+    padding: 14px 16px;
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 6px;
+  }
+  .instructions {
+    font-size: 14px;
+    color: #374151;
+    margin: 18px 0 8px;
+  }
+  .drop-zone {
+    min-height: 70px;
+    padding: 14px;
+    border: 2px dashed #9ca3af;
+    border-radius: 10px;
+    background: #fafafa;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-content: flex-start;
+  }
+  .drop-zone.over { background: #ecfdf5; border-color: #10b981; }
+  .word-bank {
+    margin-top: 14px;
+    padding: 14px;
+    background: #fef3c7;
+    border-radius: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    min-height: 60px;
+  }
+  .word {
+    display: inline-block;
+    padding: 8px 14px;
+    background: white;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    cursor: grab;
+    font-size: 15px;
+    user-select: none;
+    transition: all .15s;
+    box-shadow: 0 1px 2px rgba(0,0,0,.05);
+  }
+  .word:hover { border-color: #3b82f6; transform: translateY(-1px); }
+  .word.dragging { opacity: .4; }
+  .word.correct { background: #d1fae5; border-color: #10b981; }
+  .word.incorrect { background: #fee2e2; border-color: #ef4444; }
+  #timer.warning { background: #ef4444; color: white; }
+  #timer.ending { background: #ef4444; color: white; animation: pulse .5s infinite alternate; }
+  @keyframes pulse { from { opacity: 1; } to { opacity: .5; } }
+  .buttons { margin-top: 18px; display: flex; gap: 10px; }
+  button {
+    padding: 10px 22px;
+    font-size: 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all .15s;
+  }
+  .btn-primary { background: #1e3a8a; color: white; }
+  .btn-primary:hover { background: #1e40af; }
+  .btn-secondary { background: #e5e7eb; color: #1f2937; }
+  .btn-secondary:hover { background: #d1d5db; }
+  #feedback {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 8px;
+    font-size: 15px;
+    display: none;
+  }
+  #feedback.correct { background: #d1fae5; color: #065f46; border: 1px solid #10b981; }
+  #feedback.incorrect { background: #fee2e2; color: #991b1b; border: 1px solid #ef4444; }
+  #report {
+    display: none;
+  }
+  #report h2 { margin-top: 0; color: #1e3a8a; }
+  .report-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid #e5e7eb;
+    font-size: 14px;
+  }
+  .report-row:last-child { border-bottom: none; }
+  .report-row .q { color: #374151; }
+  .report-row .result { font-weight: 600; }
+  .result.ok { color: #059669; }
+  .result.bad { color: #dc2626; }
+  .summary {
+    background: #eff6ff;
+    padding: 14px;
+    border-radius: 8px;
+    margin: 14px 0;
+    font-size: 15px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>TOEFL iBT — Build a Sentence</h1>
+  <div id="timer">06:00</div>
+</header>
+
+<div class="container">
+
+  <div id="quiz">
+    <div class="card">
+      <div class="progress" id="progress">Question 1 of 5</div>
+      <div class="person-label">Person 1</div>
+      <div class="person1-text" id="person1"></div>
+
+      <div class="instructions">
+        <strong>Person 2:</strong> Drag the words into the box below to form a grammatically correct and coherent response.
+      </div>
+
+      <div class="person-label" style="margin-top:14px;">Your Answer</div>
+      <div class="drop-zone" id="answerZone"></div>
+
+      <div class="person-label" style="margin-top:14px;">Word Bank</div>
+      <div class="word-bank" id="wordBank"></div>
+
+      <div class="buttons">
+        <button class="btn-secondary" id="resetBtn">Reset</button>
+        <button class="btn-primary" id="submitBtn">Submit</button>
+      </div>
+
+      <div id="feedback"></div>
+    </div>
+  </div>
+
+  <div id="report" class="card">
+    <h2>Practice Report</h2>
+    <div class="summary" id="summary"></div>
+    <div id="reportDetails"></div>
+    <div class="buttons">
+      <button class="btn-primary" id="restartBtn">Practice Again</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ALL_QUESTIONS = [
+  { person1: "I heard you just came back from Japan. How was the trip?", answer: "It was the most memorable experience I have ever had" },
+  { person1: "Why didn't you attend the lecture yesterday?", answer: "I was feeling under the weather so I decided to rest" },
+  { person1: "Do you think studying abroad is worth the cost?", answer: "Although it is expensive the exposure to new cultures is invaluable" },
+  { person1: "What's your plan after graduation?", answer: "I am planning to pursue a master's degree in computer science" },
+  { person1: "How do you usually prepare for exams?", answer: "I make a schedule and review my notes a little every day" },
+  { person1: "Are you going to the campus festival this weekend?", answer: "I would love to go but I have to finish my research paper" },
+  { person1: "What did you think of the professor's lecture?", answer: "It was informative but a bit difficult to follow at times" },
+  { person1: "How are you finding your new roommate?", answer: "She is friendly and we seem to have a lot in common" },
+  { person1: "Why did you decide to major in biology?", answer: "I have always been fascinated by how living organisms function" },
+  { person1: "Did you manage to finish the assignment on time?", answer: "Yes I stayed up late last night to get it done" },
+  { person1: "What's the best way to improve my English speaking?", answer: "The key is to practice conversation with native speakers regularly" },
+  { person1: "Have you tried the new café near the library?", answer: "Not yet but I have heard that their coffee is excellent" },
+  { person1: "Why are you looking so tired today?", answer: "I barely got any sleep because of the noise outside" },
+  { person1: "Do you prefer studying alone or in a group?", answer: "I prefer studying alone because I can concentrate much better" },
+  { person1: "What are you going to do during spring break?", answer: "I am thinking about visiting my family back in my hometown" },
+  { person1: "How was your presentation this morning?", answer: "It went better than I expected despite my nervousness" },
+  { person1: "Why is the library so crowded today?", answer: "Final exams are coming up so everyone is cramming" },
+  { person1: "Did you enjoy the movie we watched last night?", answer: "Honestly I found the plot quite confusing and hard to follow" },
+  { person1: "What made you choose this university?", answer: "Its reputation in my field of study attracted me the most" },
+  { person1: "Are you still planning to join the debate club?", answer: "I was but my schedule this semester is simply too tight" },
+  { person1: "How do you balance work and studies?", answer: "I try to set clear priorities and stick to a routine" },
+  { person1: "What's your favorite subject this semester?", answer: "I really enjoy my psychology class because the topics are fascinating" },
+  { person1: "Why did you switch your major last year?", answer: "I realized that my passion lies in a completely different field" },
+  { person1: "Have you finished reading the assigned book yet?", answer: "I am about halfway through and finding it very engaging" },
+  { person1: "What do you usually do on weekends?", answer: "I like to relax by going hiking or reading a good book" },
+  { person1: "Did you sign up for the internship program?", answer: "Yes I submitted my application just before the deadline yesterday" },
+  { person1: "How did your job interview go?", answer: "I think it went well although they asked some tricky questions" },
+  { person1: "Why don't you take a break from studying?", answer: "I wish I could but this exam is really important to me" },
+  { person1: "What kind of music do you usually listen to?", answer: "I enjoy a wide variety of genres depending on my mood" },
+  { person1: "Are you attending the conference next month?", answer: "I am planning to but I still need to register for it" },
+  { person1: "Why did you decide to live off campus?", answer: "I wanted more privacy and a quieter place to study" },
+  { person1: "How often do you visit the gym?", answer: "I try to work out at least three or four times a week" },
+  { person1: "What do you miss most about home?", answer: "I miss my mother's cooking more than anything else" },
+  { person1: "Did you understand today's math lecture?", answer: "Most of it made sense but the last part was confusing" },
+  { person1: "Why are you learning a second language?", answer: "Being bilingual will give me a significant advantage in my career" },
+  { person1: "What do you plan to do this summer?", answer: "I hope to find a paid internship related to my field" },
+  { person1: "How was your first day at the new job?", answer: "Everyone was welcoming but there is a lot to learn" },
+  { person1: "Why did you skip breakfast this morning?", answer: "I woke up late and did not have time to eat" },
+  { person1: "Do you think the assignment was too difficult?", answer: "It was challenging but manageable if you started early enough" },
+  { person1: "What's your opinion on online classes?", answer: "They are convenient but I prefer the interaction of in-person lectures" },
+  { person1: "Have you ever considered studying abroad?", answer: "Yes it has been a dream of mine for many years" },
+  { person1: "Why is your sister visiting this weekend?", answer: "She wants to see the campus before she applies next year" },
+  { person1: "How did you hear about this scholarship?", answer: "My academic advisor recommended that I apply for it" },
+  { person1: "What's the hardest class you're taking?", answer: "Organic chemistry is by far the most demanding course this semester" },
+  { person1: "Did you go to the career fair yesterday?", answer: "I did and I made some valuable connections with recruiters" },
+  { person1: "Why are you so passionate about the environment?", answer: "I believe our generation has a responsibility to protect the planet" },
+  { person1: "How long have you been playing the guitar?", answer: "I have been playing since I was about ten years old" },
+  { person1: "What do you think of the new dorms?", answer: "They are much more modern and comfortable than the old ones" },
+  { person1: "Why didn't you join us for lunch?", answer: "I had a meeting with my thesis advisor that ran late" },
+  { person1: "Are you ready for tomorrow's presentation?", answer: "I have rehearsed several times but I am still a little nervous" },
+  { person1: "What's the secret to your good grades?", answer: "There is no secret just consistent effort and good time management" },
+  { person1: "How did you learn to cook so well?", answer: "I picked it up by watching my grandmother when I was young" },
+  { person1: "Why did you choose to study history?", answer: "Understanding the past helps me make sense of the present" },
+  { person1: "Have you decided where to do your internship?", answer: "I am torn between two companies that both seem promising" },
+  { person1: "What's your biggest academic weakness?", answer: "I struggle with procrastination especially when assignments feel overwhelming" },
+  { person1: "Did you enjoy the guest speaker today?", answer: "Her stories about working in the industry were truly inspiring" },
+  { person1: "Why are you applying for graduate school?", answer: "I want to specialize further in my area of interest" },
+  { person1: "How do you handle stress during finals?", answer: "I make sure to exercise and get enough sleep every night" },
+  { person1: "What made you start volunteering?", answer: "I wanted to give back to the community that raised me" },
+  { person1: "Did you notice how crowded the cafeteria was?", answer: "It seems to get busier and busier with each passing week" },
+  { person1: "Why are you taking so many credits this term?", answer: "I want to graduate a semester early if it is possible" },
+  { person1: "How is your thesis research progressing?", answer: "Slowly but I am finally starting to see meaningful results" },
+  { person1: "What should I bring to the study session?", answer: "Just your textbook notebook and perhaps some snacks to share" },
+  { person1: "Why didn't you apply to the honors program?", answer: "I did not think my grades were strong enough at the time" },
+  { person1: "Have you met the new exchange students?", answer: "Only a few but they all seem very friendly and curious" },
+  { person1: "What's your strategy for writing essays?", answer: "I always start with an outline to organize my thoughts clearly" },
+  { person1: "Did you hear about the schedule change?", answer: "Yes the professor sent an email about it earlier this morning" },
+  { person1: "Why do you always sit in the front row?", answer: "I find that I pay attention much better when I sit there" },
+  { person1: "How did you find that part-time job?", answer: "I saw a posting on the student employment website last week" },
+  { person1: "What's the most interesting thing you learned today?", answer: "Our professor explained a concept that completely changed my perspective" },
+  { person1: "Why are you taking notes by hand?", answer: "Studies show that handwriting notes improves memory and understanding" },
+  { person1: "Did you finish the lab report?", answer: "Almost I just need to double check my calculations before submitting" },
+  { person1: "How was your weekend trip to the mountains?", answer: "It was exactly the break I needed from all the stress" },
+  { person1: "What do you think of the new coffee shop?", answer: "The atmosphere is nice but the prices are a bit high" },
+  { person1: "Why are you carrying so many books today?", answer: "I have to return them all to the library before closing" },
+  { person1: "Have you ever thought about becoming a teacher?", answer: "It has crossed my mind but I am not entirely sure" },
+  { person1: "What's your favorite spot on campus?", answer: "There is a quiet bench near the garden where I love reading" },
+  { person1: "Why did you decide to join the orchestra?", answer: "Music has always been a wonderful way for me to relax" },
+  { person1: "How do you stay motivated during long projects?", answer: "I break them into smaller tasks and celebrate each milestone" },
+  { person1: "Did you like the book the professor recommended?", answer: "I found it challenging at first but ultimately very rewarding" },
+  { person1: "Why are you always so organized?", answer: "I learned the hard way that being disorganized causes unnecessary stress" },
+  { person1: "What brought you to this country?", answer: "I came here primarily for the excellent educational opportunities available" },
+  { person1: "How did you prepare for the TOEFL?", answer: "I practiced every section daily for about three months straight" },
+  { person1: "Why is your laptop always with you?", answer: "All my notes and assignments are stored on it for convenience" },
+  { person1: "Did you enjoy the field trip to the museum?", answer: "It was fascinating and I learned much more than I expected" },
+  { person1: "What do you do to unwind after classes?", answer: "I usually go for a walk or listen to some music" },
+  { person1: "Why are you applying for that fellowship?", answer: "It would give me the chance to conduct independent research abroad" },
+  { person1: "How do you feel about working in groups?", answer: "I enjoy it when everyone contributes their fair share equally" },
+  { person1: "What made you interested in engineering?", answer: "I have always loved solving problems and building things with my hands" },
+  { person1: "Did you see the announcement about the deadline extension?", answer: "Yes it gives us an extra week which is a huge relief" },
+  { person1: "Why do you always bring your own lunch?", answer: "It saves money and is usually much healthier than eating out" },
+  { person1: "How was your meeting with the academic advisor?", answer: "She gave me some really useful advice about my course selection" },
+  { person1: "What are you reading these days?", answer: "I am working through a novel that a friend strongly recommended" },
+  { person1: "Why are you learning to code?", answer: "Programming skills are becoming essential in almost every modern profession" },
+  { person1: "Did you get the research assistant position?", answer: "I am still waiting to hear back from the professor about it" },
+  { person1: "How do you remember so many vocabulary words?", answer: "I use flashcards and review them whenever I have a free moment" },
+  { person1: "What's the most valuable lesson from college?", answer: "Learning how to manage my time has been absolutely life changing" },
+  { person1: "Why did you choose to live with roommates?", answer: "It is more affordable and the social aspect is a bonus" },
+  { person1: "How did you find out about this university?", answer: "A former teacher of mine recommended it very highly to me" },
+  { person1: "What do you plan to do after the exam?", answer: "I am going to sleep for at least twelve hours straight" },
+  // --- 500 additional conversational questions (max 14 words each) ---
+  { person1: "Did you make it to the bank before it closed?", answer: "I got there just five minutes before they locked the doors" },
+  { person1: "Why did you change your phone number?", answer: "I was getting too many spam calls so I decided to switch" },
+  { person1: "Are you going to watch the game tonight?", answer: "I might if I finish my homework before it starts" },
+  { person1: "How is your brother doing at his new school?", answer: "He seems to be adjusting well and has already made some friends" },
+  { person1: "Did you find the book you were looking for?", answer: "Not at the store but I ordered it online instead" },
+  { person1: "Why do you always carry a water bottle?", answer: "I try to stay hydrated throughout the day especially during classes" },
+  { person1: "What happened to the group chat?", answer: "Someone accidentally deleted it so we had to create a new one" },
+  { person1: "Do you think we should take the bus or walk?", answer: "Let us walk since the weather is nice and it is not far" },
+  { person1: "How did you do on the quiz this morning?", answer: "I think I got most of the answers right but I am not sure" },
+  { person1: "Are you planning to renew your lease?", answer: "I am still thinking about it because the rent went up again" },
+  { person1: "Did you talk to your advisor about the schedule conflict?", answer: "Yes and she helped me find an alternative section that works better" },
+  { person1: "Why is the printer always broken?", answer: "I think it is because too many people use it without proper care" },
+  { person1: "What did you end up getting for dinner?", answer: "I just made a sandwich because I was too tired to cook" },
+  { person1: "How was the weather during your trip?", answer: "It rained almost every day but we still managed to have fun" },
+  { person1: "Are you going to the review session tomorrow?", answer: "Definitely because I need all the help I can get before the exam" },
+  { person1: "Did you remember to send that email?", answer: "I completely forgot but I will do it as soon as I get home" },
+  { person1: "Why did you stop going to the gym?", answer: "My schedule got too busy but I plan to start again next month" },
+  { person1: "What made you decide to take that class?", answer: "A friend told me the professor was really engaging and knowledgeable" },
+  { person1: "How long did it take to write your essay?", answer: "It took me about six hours spread over two days" },
+  { person1: "Are you allergic to any medications?", answer: "Not that I know of but I should probably check with my doctor" },
+  { person1: "Did the meeting go well?", answer: "It was productive and we came up with a solid plan going forward" },
+  { person1: "Why are you wearing a suit today?", answer: "I have a job interview right after my last class this afternoon" },
+  { person1: "What do you usually have for breakfast?", answer: "I keep it simple with toast and coffee most mornings" },
+  { person1: "How do you get along with your coworkers?", answer: "We get along great and often hang out together after work" },
+  { person1: "Did you see the email from the department?", answer: "Yes they announced that the deadline has been extended by one week" },
+  { person1: "Are you happy with your test score?", answer: "I did better than I expected so yes I am quite pleased" },
+  { person1: "Why did you skip the orientation?", answer: "I had a family emergency and could not make it in time" },
+  { person1: "What is the best restaurant near campus?", answer: "There is a Thai place on Main Street that I really recommend" },
+  { person1: "How often do you talk to your parents?", answer: "I try to call them at least twice a week if not more" },
+  { person1: "Did you finish setting up your new laptop?", answer: "Almost but I still need to install a few more programs" },
+  { person1: "Why do you prefer tea over coffee?", answer: "Coffee makes me too jittery but tea gives me a gentle boost" },
+  { person1: "What are you saving money for?", answer: "I am saving up for a trip to Europe next summer" },
+  { person1: "How was the concert last Friday?", answer: "It was amazing and the band played all of my favorite songs" },
+  { person1: "Are you thinking about getting a new car?", answer: "I would like to but I cannot afford one right now" },
+  { person1: "Did the landlord fix the heating yet?", answer: "He said a technician would come sometime this week to take a look" },
+  { person1: "Why are there so few students in class today?", answer: "I think a lot of people are out sick with the flu" },
+  { person1: "What did you think of the documentary?", answer: "It was eye opening and I learned things I had never known before" },
+  { person1: "How did your driving test go?", answer: "I passed on my first try which was a huge relief for me" },
+  { person1: "Are you still volunteering at the shelter?", answer: "Yes I go every Saturday morning and it has been really rewarding" },
+  { person1: "Did you find a parking spot easily?", answer: "Not at all I had to drive around for almost twenty minutes" },
+  { person1: "Why do you always study in the library?", answer: "It is the quietest place on campus and helps me stay focused" },
+  { person1: "What was the highlight of your weekend?", answer: "I went to a farmers market and discovered some great local produce" },
+  { person1: "How do you like the new class schedule?", answer: "It is much better because I have no early morning classes anymore" },
+  { person1: "Did you apply for the teaching assistant position?", answer: "I did and I should hear back from the department by next week" },
+  { person1: "Are you going to the alumni event next month?", answer: "I was not planning to but maybe I should go for networking" },
+  { person1: "Why did you move to a different apartment?", answer: "The old one was too small and the neighborhood was not very safe" },
+  { person1: "What do you do when you feel homesick?", answer: "I call my family or cook a meal that reminds me of home" },
+  { person1: "How did the group discussion go in class?", answer: "It was lively and everyone had something interesting to contribute" },
+  { person1: "Did you bring an umbrella today?", answer: "No and I really regret it because it started raining after lunch" },
+  { person1: "Are you taking any summer classes?", answer: "I signed up for two so I can get ahead on my credits" },
+  { person1: "Why is your backpack so heavy today?", answer: "I have three textbooks and my laptop in there for different classes" },
+  { person1: "What is the fastest way to get downtown from here?", answer: "The subway is the quickest option and it only takes about fifteen minutes" },
+  { person1: "How did your study abroad application go?", answer: "I got accepted to the program in London and I am so excited" },
+  { person1: "Did you try the new recipe you found online?", answer: "Yes but it did not turn out as well as I had hoped" },
+  { person1: "Are you going to join the intramural soccer team?", answer: "I would love to if I can find the time in my schedule" },
+  { person1: "Why do you think attendance has been dropping?", answer: "The lectures are recorded so some students prefer to watch them at home" },
+  { person1: "What was the hardest question on the test?", answer: "The last essay question was really tricky because the prompt was vague" },
+  { person1: "How did your parents feel about your career choice?", answer: "They were supportive once I explained why it was important to me" },
+  { person1: "Did you manage to get tickets for the show?", answer: "They sold out in minutes so unfortunately I missed out completely" },
+  { person1: "Are you coming to the study group on Thursday?", answer: "I will be there as long as nothing unexpected comes up beforehand" },
+  { person1: "Why did the professor cancel office hours this week?", answer: "She mentioned she had a conference to attend out of town" },
+  { person1: "What is your least favorite thing about campus?", answer: "The parking situation is terrible and there are never enough spots available" },
+  { person1: "How long have you been living in this city?", answer: "I moved here about three years ago for my undergraduate studies" },
+  { person1: "Did you know the bookstore is having a sale?", answer: "Really I should go check it out before all the good books go" },
+  { person1: "Are you close with anyone in your program?", answer: "I have a few good friends who I study and hang out with" },
+  { person1: "Why did you choose to learn Spanish?", answer: "It is widely spoken and I thought it would be useful for travel" },
+  { person1: "What do you usually do between classes?", answer: "I grab a coffee and review my notes from the previous lecture" },
+  { person1: "How was the workshop you attended last week?", answer: "It was hands on and I picked up some really useful skills" },
+  { person1: "Did your roommate apologize for the noise?", answer: "She did and promised to keep it down during the weeknights from now" },
+  { person1: "Are you planning to travel during the break?", answer: "I might visit a friend in another state if I can afford it" },
+  { person1: "Why did you turn down the party invitation?", answer: "I had an early exam the next morning and needed to sleep" },
+  { person1: "What is the one thing you wish you knew earlier?", answer: "I wish I had known how important networking is in college" },
+  { person1: "How is your online course going so far?", answer: "It is going well but I miss the structure of regular classes" },
+  { person1: "Did you report the broken window to maintenance?", answer: "I called them yesterday and they said they would fix it this week" },
+  { person1: "Are you satisfied with your current living situation?", answer: "For the most part yes but I wish the rent were a bit lower" },
+  { person1: "Why do you wake up so early every day?", answer: "I find that I am most productive in the early morning hours" },
+  { person1: "What did you talk about in your therapy session?", answer: "We discussed some strategies for managing stress during the school year" },
+  { person1: "How do you feel about public speaking?", answer: "It makes me nervous but I am getting better with each presentation" },
+  { person1: "Did your professor give any hints about the final?", answer: "She said to focus mainly on the topics covered after the midterm" },
+  { person1: "Are you interested in joining the student government?", answer: "I have thought about it but I am not sure I have the time" },
+  { person1: "Why did the power go out last night?", answer: "There was a bad storm and it knocked out electricity for several hours" },
+  { person1: "What is the best advice anyone has ever given you?", answer: "My father always told me to never stop learning no matter what" },
+  { person1: "How do you plan to celebrate your birthday?", answer: "I am thinking of having a small dinner with my closest friends" },
+  { person1: "Did you get a chance to talk to the new student?", answer: "Yes she seems really nice and is from a small town nearby" },
+  { person1: "Are you bringing your car to campus next semester?", answer: "Probably not because parking is expensive and the bus is more convenient" },
+  { person1: "Why do you think that project got such a high grade?", answer: "We put in a lot of effort and our research was very thorough" },
+  { person1: "What was your first impression of the campus?", answer: "I thought it was beautiful especially the old buildings near the quad" },
+  { person1: "How do you stay organized with so many classes?", answer: "I use a planner and set reminders for every deadline and assignment" },
+  { person1: "Did you attend the fire safety training?", answer: "I did and it was actually more informative than I had expected" },
+  { person1: "Are you comfortable with your workload this semester?", answer: "It is manageable but I have to be very disciplined with my time" },
+  { person1: "Why didn't you ask the professor for an extension?", answer: "I did not want to seem unprepared so I just pushed through instead" },
+  { person1: "What is your go-to comfort food?", answer: "Nothing beats a warm bowl of soup on a cold rainy day" },
+  { person1: "How did you hear about this event?", answer: "I saw a flyer posted on the bulletin board in the hallway" },
+  { person1: "Did the bus come on time this morning?", answer: "It was about ten minutes late which made me rush to class" },
+  { person1: "Are you going to keep studying tonight?", answer: "I think I have done enough for today and need a break now" },
+  { person1: "Why is there construction outside the dorm?", answer: "They are building a new student center that should be done next year" },
+  { person1: "What would you change about your daily routine?", answer: "I would wake up earlier so I could exercise before my classes" },
+  { person1: "How is your research paper coming along?", answer: "I have the outline ready but still need to write the introduction" },
+  { person1: "Did your friend end up transferring to another school?", answer: "Yes she moved to a university closer to her family last month" },
+  { person1: "Are you nervous about graduating?", answer: "A little because I am not sure what comes next for me yet" },
+  { person1: "Why did you delete your social media accounts?", answer: "They were taking up too much of my time and affecting my focus" },
+  { person1: "What is the dress code for the event?", answer: "I believe it is business casual so a nice shirt should be fine" },
+  { person1: "How do you usually get to class in the winter?", answer: "I take the campus shuttle because walking in the snow is miserable" },
+  { person1: "Did you enjoy the potluck at your neighbor's place?", answer: "It was great and I tried several dishes that I had never had before" },
+  { person1: "Are you going to reapply for the scholarship?", answer: "Yes I plan to submit a stronger application this time around" },
+  { person1: "Why does the cafeteria close so early on weekends?", answer: "I have no idea but it is really inconvenient for late risers" },
+  { person1: "What is the most useful app on your phone?", answer: "I use my calendar app constantly to keep track of everything" },
+  { person1: "How long does it take to walk to the gym?", answer: "It is about a fifteen minute walk from the main dormitory building" },
+  { person1: "Did you see the new mural outside the art building?", answer: "I did and I think it really brightens up that whole area" },
+  { person1: "Are you keeping up with the reading assignments?", answer: "I fell behind last week but I am catching up over the weekend" },
+  { person1: "Why do you think she dropped the class?", answer: "I heard she was struggling with the material and felt too overwhelmed" },
+  { person1: "What did you pack for lunch today?", answer: "Just a salad and some fruit because I am trying to eat healthier" },
+  { person1: "How did you handle the disagreement with your professor?", answer: "I went to her office and we had a calm and respectful conversation" },
+  { person1: "Did you find a good deal on your textbooks?", answer: "I found most of them used online for less than half price" },
+  { person1: "Are you excited about the upcoming break?", answer: "Absolutely I have been counting down the days since midterms ended" },
+  { person1: "Why are the library hours shorter this week?", answer: "It is because of the holiday and they always reduce hours for that" },
+  { person1: "What motivates you to keep studying when it gets hard?", answer: "I think about my long term goals and that keeps me going" },
+  { person1: "How was your phone interview?", answer: "It was short but I think I made a good impression on them" },
+  { person1: "Did you sign up for health insurance through the school?", answer: "Yes I enrolled during the open registration period at the beginning of fall" },
+  { person1: "Are you doing anything special for the holidays?", answer: "I am just going home to spend time with my family this year" },
+  { person1: "Why did you pick that topic for your presentation?", answer: "It is something I feel strongly about and wanted to share with others" },
+  { person1: "What was the line like at the registrar's office?", answer: "It was incredibly long and I waited for almost forty five minutes" },
+  { person1: "How do you keep in touch with friends from back home?", answer: "We have a group chat and try to video call once a week" },
+  { person1: "Did you get your flu shot this year?", answer: "Not yet but I am planning to go to the clinic on Friday" },
+  { person1: "Are you considering a double major?", answer: "I am thinking about it but it would mean taking extra classes every semester" },
+  { person1: "Why is the campus so empty today?", answer: "Most students left early for the long weekend and will not be back until Monday" },
+  { person1: "What do you usually order at that restaurant?", answer: "I always get the grilled chicken sandwich because it is my absolute favorite" },
+  { person1: "How did your team perform in the competition?", answer: "We placed second overall which was better than we had expected" },
+  { person1: "Did you notice the price increase at the bookstore?", answer: "Yes everything seems more expensive than it was at the start of last semester" },
+  { person1: "Are you following any podcasts right now?", answer: "I recently started listening to one about history and it is really fascinating" },
+  { person1: "Why do you carry your notes everywhere?", answer: "I like to review them whenever I have a few spare minutes" },
+  { person1: "What surprised you most about college life?", answer: "How much responsibility you have to take on all by yourself" },
+  { person1: "How was the open mic night at the café?", answer: "It was a lot of fun and some of the performers were really talented" },
+  { person1: "Did you ask your professor for a letter of recommendation?", answer: "I did and she agreed to write one by the end of the month" },
+  { person1: "Are you going to attend the virtual career workshop?", answer: "I signed up for it because I think it could help with my job search" },
+  { person1: "Why did you return the jacket you bought?", answer: "It did not fit properly and the color was different from the picture" },
+  { person1: "What do you think of the new student lounge?", answer: "It is a great space and I wish they had built it sooner" },
+  { person1: "How many credits are you taking this semester?", answer: "I am taking eighteen credits which is the maximum allowed for undergraduates" },
+  { person1: "Did the repairman come to fix the air conditioning?", answer: "He came but said he needs to order a part before he can fix it" },
+  { person1: "Are you worried about finding a job after graduation?", answer: "A little but I am trying to build my resume as much as possible" },
+  { person1: "Why don't you eat at the dining hall anymore?", answer: "The food quality went down and I prefer cooking my own meals now" },
+  { person1: "What did your advisor say about your course plan?", answer: "She said I am on track to graduate on time without any issues" },
+  { person1: "How did your tutoring session go?", answer: "It was really helpful and I finally understand the material much better now" },
+  { person1: "Did you try to fix the problem yourself first?", answer: "I tried but it was beyond what I could handle on my own" },
+  { person1: "Are you happy with the electives you chose?", answer: "One of them is great but the other has been a bit disappointing" },
+  { person1: "Why do you always sit in the back of the classroom?", answer: "I feel less anxious there and can focus without feeling watched" },
+  { person1: "What is the most useful thing you learned this semester?", answer: "I learned how to write more clearly and structure my arguments effectively" },
+  { person1: "How do you deal with writer's block?", answer: "I usually take a short walk and come back with a fresh perspective" },
+  { person1: "Did you lock the door before you left?", answer: "I think so but now you are making me second guess myself" },
+  { person1: "Are you enjoying the book club you joined?", answer: "Yes the discussions are always interesting and we read great selections" },
+  { person1: "Why do you think the project deadline was moved?", answer: "The professor probably realized that the original deadline was too tight for everyone" },
+  { person1: "What was your favorite meal this week?", answer: "I made homemade pizza on Wednesday and it turned out perfectly" },
+  { person1: "How did you prepare for the interview?", answer: "I practiced common questions with a friend and researched the company thoroughly" },
+  { person1: "Did you end up buying the used textbook?", answer: "Yes it was in great condition and saved me almost thirty dollars" },
+  { person1: "Are you able to focus when you study at home?", answer: "Not always because there are too many distractions in my apartment" },
+  { person1: "Why do you prefer morning classes over afternoon ones?", answer: "I like getting my classes done early so I have the afternoon free" },
+  { person1: "What do you think is the hardest part of college?", answer: "Balancing everything at once especially when deadlines pile up all at once" },
+  { person1: "How did you celebrate the end of finals?", answer: "A group of us went out for dinner and just relaxed together" },
+  { person1: "Did you thank the professor for the extra help?", answer: "Of course I sent her a thank you email the very next day" },
+  { person1: "Are you used to the cold weather here yet?", answer: "Not really I still wear three layers every time I go outside" },
+  { person1: "Why are you changing your research topic?", answer: "I found that there was not enough existing data to support my original idea" },
+  { person1: "What do you think about the new grading policy?", answer: "I think it is fairer because it puts less pressure on single exams" },
+  { person1: "How is your garden doing this spring?", answer: "The tomatoes are growing well but the herbs have not sprouted yet" },
+  { person1: "Did you lose your student ID again?", answer: "Unfortunately yes and I have to pay a fee to get a replacement" },
+  { person1: "Are you planning to attend commencement?", answer: "Of course my whole family is flying in to watch me graduate" },
+  { person1: "Why do you think group work is so challenging?", answer: "It is hard because everyone has different schedules and working styles" },
+  { person1: "What did the doctor say about your knee?", answer: "She said it is a minor strain and should heal within a few weeks" },
+  { person1: "How is the new semester treating you so far?", answer: "It started off busy but I am starting to find my rhythm now" },
+  { person1: "Did you remember to pick up the dry cleaning?", answer: "I did and it cost a bit more than I was expecting" },
+  { person1: "Are you making progress on your thesis?", answer: "Slowly but surely I just finished the literature review section last night" },
+  { person1: "Why don't you ride your bike to campus?", answer: "The roads near my apartment are not safe enough for cycling unfortunately" },
+  { person1: "What time does the last bus leave from campus?", answer: "I think it departs around eleven thirty on weekdays and earlier on weekends" },
+  { person1: "How do you manage your student loans?", answer: "I keep track of my payments and try to avoid unnecessary spending" },
+  { person1: "Did the TA explain the homework clearly?", answer: "He tried but I think most of us left the session still confused" },
+  { person1: "Are you going to the farmers market this Saturday?", answer: "I plan to because they have the best fresh bread every weekend" },
+  { person1: "Why did you stop watching that TV series?", answer: "The plot became too repetitive and I lost interest after the third season" },
+  { person1: "What made the lecture so interesting today?", answer: "The professor used real life examples that made the theory easy to understand" },
+  { person1: "How was your visit to the career center?", answer: "They helped me update my resume and it looks much more professional now" },
+  { person1: "Did you tell your landlord about the leaky faucet?", answer: "I sent him a message yesterday but he has not responded yet" },
+  { person1: "Are you taking the train or flying home?", answer: "I am flying because the train takes too long and costs almost the same" },
+  { person1: "Why do you think he did not get the internship?", answer: "His resume was strong but his interview skills still need a lot of work" },
+  { person1: "What kind of laptop do you recommend for students?", answer: "Something lightweight with good battery life is usually the best choice" },
+  { person1: "How often do you eat out during the week?", answer: "Maybe once or twice because eating out every day gets too expensive" },
+  { person1: "Did you check if the library has that journal article?", answer: "I checked and it is available through the online database for free" },
+  { person1: "Are you getting along with your project partner?", answer: "We work well together because we have similar work ethics and expectations" },
+  { person1: "Why did the club meeting run so long?", answer: "There were a lot of issues to discuss and everyone wanted to share opinions" },
+  { person1: "What was the best part of your day?", answer: "Getting a compliment from my professor on the paper I submitted yesterday" },
+  { person1: "How do you avoid getting distracted while studying?", answer: "I put my phone in another room and use a timer to stay focused" },
+  { person1: "Did you pick up your prescription from the pharmacy?", answer: "Yes I went during my lunch break and it was ready right away" },
+  { person1: "Are you still looking for a summer sublet?", answer: "I found a place last week that is close to campus and affordable" },
+  { person1: "Why are you switching to a plant-based diet?", answer: "I want to eat healthier and reduce my impact on the environment" },
+  { person1: "What do you think of our new lab equipment?", answer: "It is much more modern and should make our experiments go more smoothly" },
+  { person1: "How was the turnout at the fundraiser?", answer: "More people showed up than expected and we raised a lot of money" },
+  { person1: "Did the professor post the grades yet?", answer: "Not yet but she said they should be up by the end of today" },
+  { person1: "Are you doing an independent study next semester?", answer: "I am considering it because it would let me explore a topic I love" },
+  { person1: "Why do you always proofread your emails before sending?", answer: "I once sent an email with a major typo and it was embarrassing" },
+  { person1: "What was the funniest thing that happened today?", answer: "My friend accidentally walked into the wrong class and sat there for ten minutes" },
+  { person1: "How do you think the semester will end?", answer: "I am hoping for the best but preparing myself for a stressful finish" },
+  { person1: "Did you return the library books on time?", answer: "I returned them one day late and had to pay a small fine" },
+  { person1: "Are you going to paint your new room?", answer: "I would like to but the landlord said we cannot make any changes" },
+  { person1: "Why do you take so many notes during lectures?", answer: "Writing things down helps me remember the material much better than just listening" },
+  { person1: "What is the closest grocery store to your apartment?", answer: "There is a small market about two blocks away that has everything I need" },
+  { person1: "How did you deal with the noisy construction?", answer: "I started studying at the library instead until the construction was finished" },
+  { person1: "Did you give your presentation using slides?", answer: "Yes I made a short slideshow to help organize my main points" },
+  { person1: "Are you going to keep your part-time job next year?", answer: "I plan to because the extra income really helps with my expenses" },
+  { person1: "Why did you choose to write about that author?", answer: "Her work has had a huge influence on how I think about storytelling" },
+  { person1: "What is the first thing you do when you get home?", answer: "I usually take off my shoes and make myself a cup of tea" },
+  { person1: "How do you think the group project turned out?", answer: "It could have been better but overall I think we did a decent job" },
+  { person1: "Did you reserve a study room for tomorrow?", answer: "I tried but they were all booked so I will try again early tomorrow" },
+  { person1: "Are you planning to get a haircut before graduation?", answer: "Yes I want to look my best for the photos with my family" },
+  { person1: "Why does your schedule look so packed this week?", answer: "I have midterms in three different classes all happening within the same few days" },
+  { person1: "What is your favorite way to spend a free afternoon?", answer: "I love going for a long walk in the park with my headphones" },
+  { person1: "How did you recover from being sick last week?", answer: "I rested a lot and drank plenty of fluids until I felt better" },
+  { person1: "Did the plumber fix the issue with the drain?", answer: "He cleared the blockage and said everything should be fine now" },
+  { person1: "Are you sure you do not want to come with us?", answer: "I appreciate the offer but I really need to finish this paper tonight" },
+  { person1: "Why are you wearing headphones in the library?", answer: "I am listening to white noise because it helps me concentrate on reading" },
+  { person1: "What is the most boring class you have ever taken?", answer: "There was a statistics class that I could barely stay awake through" },
+  { person1: "How is the Wi-Fi in your building?", answer: "It is usually reliable but it slows down a lot in the evenings" },
+  { person1: "Did you make any friends at the orientation event?", answer: "I met a few people who seem really nice and we exchanged numbers" },
+  { person1: "Are you going to the beach this summer?", answer: "I hope so because I have not had a proper vacation in a long time" },
+  { person1: "Why is the elevator always out of service?", answer: "The building is old and the elevator needs constant repairs to keep running" },
+  { person1: "What was your reaction when you got the acceptance letter?", answer: "I was so happy that I could not stop smiling for the entire day" },
+  { person1: "How do you feel about the new campus parking rules?", answer: "They are frustrating because now I have to park much farther from my classes" },
+  { person1: "Did you end up switching to the later section?", answer: "Yes and it was the best decision because the professor is much better" },
+  { person1: "Are you taking advantage of the free tutoring services?", answer: "I have gone twice and it has really helped improve my understanding" },
+  { person1: "Why did you decide to minor in philosophy?", answer: "It teaches critical thinking skills that are useful in every area of life" },
+  { person1: "What is the most memorable trip you have taken?", answer: "A road trip with my friends along the coast was absolutely unforgettable" },
+  { person1: "How did you feel about the group assignment?", answer: "It was a good learning experience even though it was stressful at times" },
+  { person1: "Did the school announce anything about the schedule?", answer: "They said classes will be cancelled on Monday due to the holiday" },
+  { person1: "Are you planning to do research over the summer?", answer: "I applied for a research position and I am hoping to hear back soon" },
+  { person1: "Why are you so quiet today?", answer: "I just have a lot on my mind and did not sleep very well" },
+  { person1: "What is the one skill you wish you had?", answer: "I wish I were better at speaking in front of large audiences" },
+  { person1: "How was the food at the new sushi place?", answer: "It was fresh and reasonably priced so I will definitely go back again" },
+  { person1: "Did you hear that the professor is retiring?", answer: "Yes and it is a shame because she was one of the best teachers here" },
+  { person1: "Are you interested in doing a study abroad exchange?", answer: "Very much so but I need to figure out the finances before I apply" },
+  { person1: "Why do you always double check the schedule?", answer: "I got confused by a room change once and do not want that to happen again" },
+  { person1: "What happened at the meeting you missed?", answer: "They discussed the budget and decided to cut funding for two clubs" },
+  { person1: "How did you learn to type so quickly?", answer: "I took a typing course in high school and practiced every day after that" },
+  { person1: "Did you pack everything you need for the trip?", answer: "I think so but I always feel like I am forgetting something important" },
+  { person1: "Are you going to ask for extra credit?", answer: "I might but only if the professor seems open to it this time" },
+  { person1: "Why do you prefer handwritten notes to digital ones?", answer: "I remember things better when I write them out by hand each time" },
+  { person1: "What is the worst grade you have ever received?", answer: "I got a D once in a math class and it was a wake-up call" },
+  { person1: "How are you adjusting to the time zone difference?", answer: "It took about a week but I am finally sleeping normally again now" },
+  { person1: "Did the school provide enough parking for the event?", answer: "Not at all and most people had to park on the side streets nearby" },
+  { person1: "Are you getting enough exercise this semester?", answer: "Honestly no and I know I need to make it more of a priority" },
+  { person1: "Why did you stop using that study method?", answer: "It was too time consuming and I found a more efficient approach instead" },
+  { person1: "What is the weirdest food combination you enjoy?", answer: "I like dipping french fries in ice cream and people always give me looks" },
+  { person1: "How do you feel about open book exams?", answer: "I actually find them harder because the questions tend to be more complex" },
+  { person1: "Did you back up your files before the update?", answer: "Thankfully yes because the update ended up deleting several of my documents" },
+  { person1: "Are you taking a lighter course load next term?", answer: "I am going to try because this semester has been really exhausting" },
+  { person1: "Why do you think the event was cancelled?", answer: "Not enough people signed up and the organizers decided it was not worth it" },
+  { person1: "What did you learn from your first job?", answer: "I learned the importance of being on time and communicating clearly with others" },
+  { person1: "How do you usually start your mornings?", answer: "I check my phone for messages and then head straight to the kitchen" },
+  { person1: "Did your class get moved to a different building?", answer: "Yes and the new room is on the other side of campus which is annoying" },
+  { person1: "Are you satisfied with the feedback you received?", answer: "It was constructive and gave me a clear idea of what to improve" },
+  { person1: "Why is your computer running so slowly?", answer: "I think it needs more memory because I have too many programs open" },
+  { person1: "What do you think about the campus dining options?", answer: "They are decent but I wish there were more healthy choices available" },
+  { person1: "How did your volunteer work go over the weekend?", answer: "It was a great experience and I plan to go back again next week" },
+  { person1: "Did you manage to talk to the financial aid office?", answer: "I went in person and they were very helpful with my questions" },
+  { person1: "Are you thinking about changing your sleep schedule?", answer: "I really should because staying up late has been affecting my productivity" },
+  { person1: "Why do you want to become a nurse?", answer: "I have always wanted to help people and it feels like the right path" },
+  { person1: "What was the traffic like on your commute?", answer: "It was terrible and took me almost twice as long as it usually does" },
+  { person1: "How did you decide which clubs to join?", answer: "I went to the activity fair and picked the ones that matched my interests" },
+  { person1: "Did your family visit you on campus this semester?", answer: "My parents came up for a weekend in October and really enjoyed it" },
+  { person1: "Are you nervous about the upcoming job fair?", answer: "A little but I have been practicing my introduction and updating my resume" },
+  { person1: "Why did you start journaling every day?", answer: "It helps me process my thoughts and keep track of how I am feeling" },
+  { person1: "What was your experience like at the writing center?", answer: "The tutor was very patient and helped me improve my thesis statement significantly" },
+  { person1: "How do you feel about the semester being almost over?", answer: "It went by so fast and I can hardly believe it is almost done" },
+  { person1: "Did you hear about the new course being offered?", answer: "Yes I am thinking about enrolling because the topic sounds really interesting" },
+  { person1: "Are you comfortable speaking up in class?", answer: "I used to be shy but I have gotten more confident over time" },
+  { person1: "Why are you considering transferring to another school?", answer: "I feel like a smaller university would be a better fit for me" },
+  { person1: "What do you do when you cannot fall asleep?", answer: "I usually read a book or listen to calm music until I relax" },
+  { person1: "How did your apartment search go?", answer: "We looked at five places and finally found one that fits our budget" },
+  { person1: "Did you enjoy the panel discussion at the conference?", answer: "It was thought provoking and the speakers had very different perspectives on the issue" },
+  { person1: "Are you going to take a gap year before grad school?", answer: "I am leaning toward it because I want some real work experience first" },
+  { person1: "Why did you stop subscribing to that magazine?", answer: "I realized I was never reading it and it was a waste of money" },
+  { person1: "What made you start waking up earlier?", answer: "I noticed I was more productive and less stressed when I started my day sooner" },
+  { person1: "How is the noise level in your new apartment?", answer: "It is much quieter than my last place which is exactly what I needed" },
+  { person1: "Did the financial aid cover your tuition?", answer: "It covered most of it but I still had to take out a small loan" },
+  { person1: "Are you ready for the camping trip this weekend?", answer: "Almost I just need to buy a few supplies from the store tomorrow" },
+  { person1: "Why didn't you sign up for the honors seminar?", answer: "The time slot conflicted with another class that I could not drop" },
+  { person1: "What was the turnout like at the career workshop?", answer: "About thirty students showed up which was more than they had anticipated" },
+  { person1: "How do you manage stress when deadlines overlap?", answer: "I make a list and tackle the most urgent tasks first one at a time" },
+  { person1: "Did you check the syllabus for the reading list?", answer: "I did and there are about ten books we need to read this semester" },
+  { person1: "Are you going to run for student council president?", answer: "I thought about it but decided to focus on my studies this year instead" },
+  { person1: "Why did you start studying with flashcards?", answer: "They help me memorize key terms and definitions more quickly and effectively" },
+  { person1: "What was the hardest adjustment when you moved here?", answer: "Getting used to the cold winters was the biggest challenge for me" },
+  { person1: "How did you prepare for the standardized test?", answer: "I took several practice tests and reviewed the areas where I was weakest" },
+  { person1: "Did the new policy affect your class schedule?", answer: "It forced me to drop one class and pick up another in its place" },
+  { person1: "Are you bringing a gift to the going-away party?", answer: "I got a small photo album that I think she will really appreciate" },
+  { person1: "Why do you think the professor gave such a hard exam?", answer: "She probably wanted to make sure we really understood the core concepts" },
+  { person1: "What is your plan for staying productive over break?", answer: "I set a few small goals so I do not lose all my momentum" },
+  { person1: "How did you find your current study method?", answer: "I tried a few different techniques and this one worked best for me" },
+  { person1: "Did you get the notes from the class you missed?", answer: "A classmate sent me hers and they were very detailed and helpful" },
+  { person1: "Are you going to retake the course you failed?", answer: "Yes I plan to take it again next semester with a different professor" },
+  { person1: "Why do you always eat lunch at the same time?", answer: "Having a routine helps me stay on track with the rest of my day" },
+  { person1: "What would you do if you won the lottery?", answer: "I would pay off my student loans and then travel around the world" },
+  { person1: "How was your meeting with the dean?", answer: "She was understanding and offered to help me resolve the issue quickly" },
+  { person1: "Did you proofread your paper before turning it in?", answer: "I went through it twice and also had a friend check it for me" },
+  { person1: "Are you looking forward to the field trip?", answer: "Very much because we are visiting a place I have always wanted to see" },
+  { person1: "Why don't you use the campus health center more often?", answer: "I keep forgetting that it is free for students and I should take advantage" },
+  { person1: "What did you and your roommate decide about the furniture?", answer: "We agreed to split the cost evenly and donate it when we move out" },
+  { person1: "How do you usually spend your Friday evenings?", answer: "I either go out with friends or stay in and watch a movie" },
+  { person1: "Did you attend the workshop on resume writing?", answer: "I did and the tips they shared were incredibly useful for my applications" },
+  { person1: "Are you keeping a budget this semester?", answer: "I started using an app to track my spending and it is really helping" },
+  { person1: "Why is the science building always so crowded?", answer: "There are a lot of lab classes scheduled there throughout the entire day" },
+  { person1: "What is the longest you have ever studied in one sitting?", answer: "I once studied for eight hours straight before a final and was exhausted" },
+  { person1: "How do you feel about the new online registration system?", answer: "It is faster than the old one but still crashes when too many people log in" },
+  { person1: "Did you ask about the extra credit assignment?", answer: "The professor said there will be one option available closer to the end of term" },
+  { person1: "Are you doing anything different to prepare for this exam?", answer: "I joined a study group this time which I think will make a difference" },
+  { person1: "Why did you choose an apartment so far from campus?", answer: "The rent was much cheaper and the neighborhood is a lot quieter there" },
+  { person1: "What did your professor say about your draft?", answer: "She said the argument was strong but the introduction needs more work" },
+  { person1: "How has your sleeping pattern changed since starting college?", answer: "I stay up much later now and rarely get eight hours of sleep anymore" },
+  { person1: "Did the team agree on a topic for the presentation?", answer: "We finally settled on one after debating for almost an entire hour" },
+  { person1: "Are you planning to take the certification exam?", answer: "Yes it would really strengthen my resume and open up more job opportunities" },
+  { person1: "Why do you think that restaurant closed down?", answer: "The food was good but the location was bad and they had very few customers" },
+  { person1: "What was your favorite childhood memory?", answer: "Playing outside with my cousins during summer vacations was always the most fun" },
+  { person1: "How do you pick which electives to take?", answer: "I look at student reviews and pick the ones that seem the most engaging" },
+  { person1: "Did you get along with your host family abroad?", answer: "They were incredibly welcoming and treated me like part of their own family" },
+  { person1: "Are you familiar with the new building on campus?", answer: "I walked by it yesterday but I have not been inside yet" },
+  { person1: "Why do you always bring a snack to class?", answer: "I get hungry between meals and it helps me stay focused during lectures" },
+  { person1: "What do you think of the new campus shuttle schedule?", answer: "It runs more frequently now which makes getting around campus much easier" },
+  { person1: "How is the signal in your building?", answer: "It is really weak on the lower floors but fine if you go upstairs" },
+  { person1: "Did your team win the trivia night?", answer: "We came in third which was not bad considering it was our first time" },
+  { person1: "Are you going to the bookstore before it closes?", answer: "I should because I need to buy a notebook before classes start tomorrow" }
+];
+
+// Filter to questions with at most 14 words. Give each a stable ID.
+const QUESTIONS_POOL = ALL_QUESTIONS
+  .filter(q => q.answer.split(' ').length <= 14)
+  .map((q, i) => ({ id: i, person1: q.person1, correct: q.answer.split(' ') }));
+
+// --- Cross-session deduplication via localStorage ---
+const STORAGE_KEY = 'toefl_seen_ids';
+function getSeenIds() {
+  try { return new Set(JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]')); }
+  catch { return new Set(); }
+}
+function markSeen(id) {
+  const seen = getSeenIds();
+  seen.add(id);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify([...seen]));
+}
+function resetSeen() {
+  localStorage.removeItem(STORAGE_KEY);
+}
+
+// Session state
+const TIME_LIMIT = 6 * 60; // 6 minutes in seconds
+let queue = [];
+let current = 0;
+let startTime = Date.now();
+let questionStart = Date.now();
+let results = [];
+let draggedEl = null;
+let timerInterval = null;
+let timeUp = false;
+
+const timerEl = document.getElementById('timer');
+const progressEl = document.getElementById('progress');
+const person1El = document.getElementById('person1');
+const answerZone = document.getElementById('answerZone');
+const wordBank = document.getElementById('wordBank');
+const feedbackEl = document.getElementById('feedback');
+const submitBtn = document.getElementById('submitBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+function fmt(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = (s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function startTimer() {
+  startTime = Date.now();
+  timeUp = false;
+  timerEl.className = '';
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    const remaining = Math.max(0, TIME_LIMIT - elapsed);
+    timerEl.textContent = fmt(remaining);
+    if (remaining <= 30) timerEl.className = 'ending';
+    else if (remaining <= 60) timerEl.className = 'warning';
+    else timerEl.className = '';
+    if (remaining <= 0) {
+      clearInterval(timerInterval);
+      timeUp = true;
+      endSession();
+    }
+  }, 250);
+}
+
+function shuffleArray(arr) {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function shuffle(arr) {
+  const a = shuffleArray(arr);
+  if (a.join(' ') === arr.join(' ')) return shuffle(arr);
+  return a;
+}
+
+function buildSession() {
+  // Prioritize unseen questions; only recycle seen ones when pool is exhausted.
+  const seen = getSeenIds();
+  const unseen = QUESTIONS_POOL.filter(q => !seen.has(q.id));
+  const seenQs = QUESTIONS_POOL.filter(q => seen.has(q.id));
+  // If all questions have been seen, reset history so everything feels fresh again.
+  if (unseen.length === 0) {
+    resetSeen();
+    queue = shuffleArray(QUESTIONS_POOL);
+  } else {
+    // Unseen first (shuffled), then seen as backup (shuffled).
+    queue = shuffleArray(unseen).concat(shuffleArray(seenQs));
+  }
+  current = 0;
+  results = [];
+  timeUp = false;
+  if (timerInterval) clearInterval(timerInterval);
+}
+
+function createWord(text) {
+  const el = document.createElement('div');
+  el.className = 'word';
+  el.textContent = text;
+  el.draggable = true;
+  el.addEventListener('dragstart', e => {
+    draggedEl = el;
+    el.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  el.addEventListener('dragend', () => {
+    el.classList.remove('dragging');
+    draggedEl = null;
+  });
+  el.addEventListener('click', () => {
+    if (el.parentElement === wordBank) answerZone.appendChild(el);
+    else wordBank.appendChild(el);
+  });
+  return el;
+}
+
+function setupDropZone(zone) {
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('over');
+    if (!draggedEl) return;
+    const after = getDragAfterElement(zone, e.clientX, e.clientY);
+    if (after == null) {
+      if (draggedEl.parentElement !== zone || draggedEl.nextSibling !== null) {
+        zone.appendChild(draggedEl);
+      }
+    } else if (after !== draggedEl && after !== draggedEl.nextSibling) {
+      zone.insertBefore(draggedEl, after);
+    }
+  });
+  zone.addEventListener('dragleave', e => {
+    if (e.target === zone) zone.classList.remove('over');
+  });
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('over');
+  });
+}
+function getDragAfterElement(container, x, y) {
+  const els = [...container.querySelectorAll('.word:not(.dragging)')];
+  let best = { dist: Infinity, element: null };
+  for (const child of els) {
+    const box = child.getBoundingClientRect();
+    if (y < box.top - 4 || y > box.bottom + 4) continue;
+    const offset = x - (box.left + box.width / 2);
+    if (offset < 0) {
+      const d = Math.abs(offset);
+      if (d < best.dist) best = { dist: d, element: child };
+    }
+  }
+  return best.element;
+}
+setupDropZone(answerZone);
+setupDropZone(wordBank);
+
+function loadQuestion() {
+  if (timeUp) return;
+  const q = queue[current % queue.length]; // wrap around if we exhaust the pool
+  progressEl.textContent = `Question ${current + 1}`;
+  person1El.textContent = q.person1;
+  answerZone.innerHTML = '';
+  wordBank.innerHTML = '';
+  feedbackEl.style.display = 'none';
+  submitBtn.textContent = 'Submit';
+  submitBtn.disabled = false;
+  shuffle(q.correct).forEach(w => wordBank.appendChild(createWord(w)));
+  questionStart = Date.now();
+}
+
+function endSession() {
+  // If user is mid-question, don't count it.
+  submitBtn.disabled = true;
+  showReport();
+}
+
+submitBtn.addEventListener('click', () => {
+  if (timeUp) return;
+  if (submitBtn.textContent === 'Next') {
+    current++;
+    loadQuestion();
+    return;
+  }
+  const q = queue[current % queue.length];
+  const userWords = [...answerZone.querySelectorAll('.word')].map(e => e.textContent);
+  const correct = q.correct;
+  const timeSpent = Math.round((Date.now() - questionStart) / 1000);
+  const isCorrect = userWords.length === correct.length &&
+                    userWords.every((w, i) => w === correct[i]);
+
+  [...answerZone.querySelectorAll('.word')].forEach((el, i) => {
+    el.classList.add(el.textContent === correct[i] ? 'correct' : 'incorrect');
+    el.draggable = false;
+  });
+  [...wordBank.querySelectorAll('.word')].forEach(el => el.draggable = false);
+
+  feedbackEl.style.display = 'block';
+  if (isCorrect) {
+    feedbackEl.className = 'correct';
+    feedbackEl.innerHTML = `<strong>Correct!</strong> Time: ${timeSpent}s — moving on…`;
+  } else {
+    feedbackEl.className = 'incorrect';
+    feedbackEl.innerHTML = `<strong>Not quite.</strong> Correct answer: "${correct.join(' ')}"<br>Time: ${timeSpent}s`;
+  }
+  results.push({
+    question: q.person1,
+    userAnswer: userWords.join(' '),
+    correctAnswer: correct.join(' '),
+    isCorrect,
+    timeSpent
+  });
+  markSeen(q.id);
+
+  submitBtn.disabled = true;
+  if (isCorrect) {
+    setTimeout(() => {
+      if (timeUp) return;
+      submitBtn.disabled = false;
+      current++;
+      loadQuestion();
+    }, 1200);
+  } else {
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Next';
+  }
+});
+
+resetBtn.addEventListener('click', loadQuestion);
+
+function showReport() {
+  document.getElementById('quiz').style.display = 'none';
+  const report = document.getElementById('report');
+  report.style.display = 'block';
+  const elapsed = Math.min(TIME_LIMIT, Math.round((Date.now() - startTime) / 1000));
+  const correctCount = results.filter(r => r.isCorrect).length;
+  const avgTime = results.length ? Math.round(results.reduce((s,r) => s + r.timeSpent, 0) / results.length) : 0;
+
+  document.getElementById('summary').innerHTML =
+    `<div style="font-size:22px;margin-bottom:6px;"><strong>${correctCount} / ${results.length} correct</strong></div>` +
+    `<strong>Questions attempted:</strong> ${results.length} in ${fmt(elapsed)}<br>` +
+    `<strong>Accuracy:</strong> ${results.length ? Math.round(correctCount/results.length*100) : 0}%<br>` +
+    `<strong>Avg time per question:</strong> ${avgTime}s`;
+  const details = document.getElementById('reportDetails');
+  details.innerHTML = results.map((r, i) => `
+    <div class="report-row">
+      <div class="q"><strong>Q${i+1}:</strong> ${r.question}<br>
+        <span style="color:#6b7280;font-size:13px;">Your answer: ${r.userAnswer || '(empty)'}</span><br>
+        ${!r.isCorrect ? `<span style="color:#059669;font-size:13px;">Correct: ${r.correctAnswer}</span>` : ''}
+      </div>
+      <div class="result ${r.isCorrect ? 'ok' : 'bad'}">
+        ${r.isCorrect ? '✓' : '✗'}<br>
+        <span style="font-size:12px;font-weight:400;color:#6b7280;">${r.timeSpent}s</span>
+      </div>
+    </div>
+  `).join('');
+}
+
+document.getElementById('restartBtn').addEventListener('click', () => {
+  buildSession();
+  document.getElementById('quiz').style.display = 'block';
+  document.getElementById('report').style.display = 'none';
+  startTimer();
+  loadQuestion();
+});
+
+buildSession();
+startTimer();
+loadQuestion();
+</script>
+</body>
+</html>

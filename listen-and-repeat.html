@@ -1,0 +1,1459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TOEFL iBT 2026 — Listen & Repeat Practice</title>
+<style>
+  :root {
+    --primary: #1a73e8;
+    --primary-dark: #1557b0;
+    --accent: #e8f0fe;
+    --danger: #d93025;
+    --success: #1e8e3e;
+    --bg: #f8f9fa;
+    --card: #ffffff;
+    --text: #202124;
+    --text-sec: #5f6368;
+    --border: #dadce0;
+    --orange: #e37400;
+    --shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.08);
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  header { background:var(--primary); color:#fff; padding:14px 24px; display:flex; align-items:center; justify-content:space-between; box-shadow:var(--shadow); }
+  header h1 { font-size:18px; font-weight:600; }
+  header .badge { background:rgba(255,255,255,.2); padding:4px 12px; border-radius:20px; font-size:13px; }
+
+  .container { max-width:760px; margin:0 auto; padding:24px 16px; }
+  .card { background:var(--card); border-radius:12px; box-shadow:var(--shadow); padding:28px; margin-bottom:20px; }
+  .card h2 { font-size:18px; margin-bottom:8px; }
+
+  .btn { display:inline-flex; align-items:center; gap:8px; padding:12px 24px; border:none; border-radius:8px; font-size:15px; font-weight:500; cursor:pointer; transition:.15s; }
+  .btn:disabled { opacity:.4; cursor:not-allowed; }
+  .btn-primary { background:var(--primary); color:#fff; }
+  .btn-primary:hover:not(:disabled) { background:var(--primary-dark); }
+  .btn-danger { background:var(--danger); color:#fff; }
+  .btn-success { background:var(--success); color:#fff; }
+  .btn-outline { background:transparent; color:var(--primary); border:2px solid var(--primary); }
+  .btn-outline:hover:not(:disabled) { background:var(--accent); }
+  .btn-group { display:flex; gap:12px; flex-wrap:wrap; margin-top:16px; }
+
+  .progress-bar { background:var(--border); border-radius:8px; height:6px; margin-bottom:20px; overflow:hidden; }
+  .progress-fill { background:var(--primary); height:100%; border-radius:8px; transition:width .4s; }
+
+  .scenario-img { width:100%; max-height:260px; object-fit:cover; border-radius:10px; margin-bottom:16px; background:var(--accent); display:flex; align-items:center; justify-content:center; font-size:48px; min-height:160px; }
+
+  .sentence-label { font-size:13px; color:var(--text-sec); font-weight:500; margin-bottom:8px; }
+  .sentence-difficulty { display:inline-block; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:600; color:#fff; margin-left:8px; }
+
+  .status { display:flex; align-items:center; gap:8px; font-size:14px; color:var(--text-sec); margin:16px 0; }
+  .status-dot { width:10px; height:10px; border-radius:50%; background:var(--border); flex-shrink:0; }
+  .status-dot.listening { background:var(--primary); animation:pulse 1.5s infinite; }
+  .status-dot.recording { background:var(--danger); animation:pulse 1s infinite; }
+  .status-dot.done { background:var(--success); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  .visualizer { display:flex; align-items:center; justify-content:center; gap:3px; height:50px; margin:12px 0; }
+  .visualizer .bar { width:4px; background:var(--primary); border-radius:4px; height:6px; transition:height .05s; }
+
+  .timer { font-size:36px; font-weight:700; text-align:center; font-variant-numeric:tabular-nums; }
+  .timer.warning { color:var(--orange); }
+  .timer.critical { color:var(--danger); animation:pulse 1s infinite; }
+  .timer-label { text-align:center; font-size:13px; color:var(--text-sec); margin-top:4px; }
+
+  audio { width:100%; border-radius:8px; margin-top:8px; }
+
+  .transcript-box { background:#f1f3f4; border-radius:8px; padding:14px 18px; margin-top:14px; font-size:14px; line-height:1.6; min-height:40px; }
+  .transcript-box .interim { color:var(--text-sec); }
+  .transcript-box .placeholder { color:var(--text-sec); font-style:italic; }
+
+  /* Eval styles */
+  .eval-card { border:1px solid var(--border); border-radius:10px; padding:18px; margin-top:16px; }
+  .eval-card h4 { font-size:14px; margin-bottom:8px; display:flex; align-items:center; gap:8px; }
+  .score-badge { display:inline-block; padding:3px 12px; border-radius:12px; font-size:12px; font-weight:600; color:#fff; }
+  .bar-bg { background:var(--border); border-radius:4px; height:8px; margin:8px 0; overflow:hidden; }
+  .bar-fill { height:100%; border-radius:4px; transition:width .6s; }
+  .feedback-text { font-size:13px; color:var(--text-sec); line-height:1.5; }
+  .fb-good { color:var(--success); font-size:13px; margin-top:4px; }
+  .fb-improve { color:var(--orange); font-size:13px; margin-top:4px; }
+
+  .overall-ring { text-align:center; margin:20px 0; }
+  .score-ring { position:relative; width:110px; height:110px; display:inline-block; }
+  .score-ring svg { transform:rotate(-90deg); }
+  .score-ring .val { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:30px; font-weight:700; }
+  .score-max { font-size:12px; color:var(--text-sec); }
+
+  .settings-row { display:flex; align-items:center; gap:12px; margin-bottom:14px; flex-wrap:wrap; }
+  .settings-row label { font-size:13px; color:var(--text-sec); font-weight:500; }
+  .voice-select { padding:8px 12px; border:1px solid var(--border); border-radius:6px; font-size:14px; background:#fff; min-width:180px; }
+
+  .scenario-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:12px; margin-top:16px; }
+  .scenario-card { border:2px solid var(--border); border-radius:10px; padding:16px; cursor:pointer; transition:.15s; background:var(--card); }
+  .scenario-card:hover { border-color:var(--primary); background:var(--accent); }
+  .scenario-card h3 { font-size:15px; margin-bottom:4px; }
+  .scenario-card p { font-size:12px; color:var(--text-sec); }
+
+  .screen { display:none; }
+  .screen.active { display:block; }
+  .footer-nav { display:flex; justify-content:space-between; margin-top:24px; }
+
+  /* Report */
+  .report-summary { background:linear-gradient(135deg,#e8f0fe,#e8ffe8); border-radius:12px; padding:24px; text-align:center; margin-bottom:20px; }
+  .session-item { border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; }
+  .session-item h4 { font-size:14px; margin-bottom:6px; }
+  .mini-scores { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
+  .mini-scores span { font-size:12px; padding:3px 10px; border-radius:12px; font-weight:600; color:#fff; }
+  .tip-box { background:#fef7e0; border-left:4px solid var(--orange); padding:14px 18px; border-radius:0 8px 8px 0; margin-top:16px; font-size:13px; line-height:1.6; }
+  .tip-box strong { color:var(--orange); }
+
+  @media print { header,.btn,.footer-nav,.print-btn{display:none!important} .card{box-shadow:none;border:1px solid #ddd} }
+  @media(max-width:600px) { .card{padding:20px} .btn{padding:10px 18px;font-size:14px} header h1{font-size:16px} }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>TOEFL iBT 2026 — Listen & Repeat</h1>
+  <span class="badge" id="taskCounter">--</span>
+</header>
+
+<div class="container">
+
+  <!-- HOME -->
+  <div class="screen active" id="screenHome">
+    <div class="card">
+      <h2>Choose a Scenario</h2>
+      <p style="color:var(--text-sec);font-size:14px;line-height:1.6;margin-bottom:12px">
+        In the TOEFL iBT 2026 <strong>Listen & Repeat</strong> section, you hear <strong>7 sentences</strong> about a campus or daily-life scenario and must repeat each one exactly.
+        Sentences get progressively harder: 2 short, 3 medium, 2 long.
+      </p>
+      <div class="scenario-grid" id="scenarioGrid"></div>
+    </div>
+    <div class="card">
+      <h2>Settings</h2>
+      <div class="settings-row">
+        <label>Voice:</label>
+        <select class="voice-select" id="voiceSelect"></select>
+      </div>
+      <div class="settings-row">
+        <label>Speed:</label>
+        <input type="range" id="speedRange" min="0.7" max="1.1" step="0.05" value="0.95" style="width:100px">
+        <span id="speedValue">0.95x</span>
+      </div>
+    </div>
+    <div id="reportBtnWrap" style="display:none;margin-top:8px">
+      <button class="btn btn-success" onclick="showReport()" style="width:100%">View Session Report</button>
+    </div>
+  </div>
+
+  <!-- TASK -->
+  <div class="screen" id="screenTask">
+    <div class="sentence-label" id="sentenceLabel"></div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+    <div class="card">
+      <div class="scenario-img" id="scenarioImg"></div>
+      <h2 id="scenarioTitle" style="font-size:15px;margin-bottom:4px"></h2>
+      <p style="font-size:13px;color:var(--text-sec)" id="scenarioDesc"></p>
+
+      <div class="status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Ready</span>
+      </div>
+
+      <div class="visualizer" id="visualizer"></div>
+
+      <div class="timer" id="timer">--</div>
+      <div class="timer-label" id="timerLabel"></div>
+
+      <div class="btn-group" id="btnGroup">
+        <button class="btn btn-primary" id="btnPlay" onclick="playPrompt()">Play Sentence</button>
+      </div>
+
+      <!-- Live transcript during recording -->
+      <div class="transcript-box" id="transcriptLive" style="display:none">
+        <span class="placeholder">Listening to your voice...</span>
+      </div>
+
+      <!-- Brief confirmation after recording -->
+      <div id="afterRecord" style="display:none;text-align:center;margin-top:20px;padding:16px;background:#e8ffe8;border-radius:10px">
+        <div style="font-size:20px;margin-bottom:6px">&#10003;</div>
+        <div style="font-size:14px;color:var(--success);font-weight:500" id="savedMsg">Saved! Moving to next sentence...</div>
+      </div>
+    </div>
+
+    <div class="footer-nav">
+      <button class="btn btn-outline" onclick="goHome()">Quit</button>
+      <button class="btn btn-outline" id="btnSkip" onclick="skipSentence()">Skip</button>
+    </div>
+  </div>
+
+  <!-- REPORT -->
+  <div class="screen" id="screenReport">
+    <div class="card">
+      <div style="text-align:center;margin-bottom:20px">
+        <h2>Session Report</h2>
+        <p style="color:var(--text-sec);font-size:13px" id="reportDate"></p>
+      </div>
+      <div id="reportContent"></div>
+      <button class="btn btn-outline print-btn" onclick="window.print()" style="margin-top:16px">Print / Save PDF</button>
+    </div>
+    <div class="footer-nav">
+      <button class="btn btn-outline" onclick="goHome()">Back to Menu</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ===== SCENARIO DATA =====
+// Each scenario: 7 sentences (2 short, 3 medium, 2 long) with campus/daily-life context
+// Time limits: sentences 1-2: 8s, 3-5: 10s, 6-7: 12s (per official TOEFL 2026 format)
+
+const SCENARIOS = [
+  {
+    name: "Campus Fitness Center",
+    desc: "A staff member explains the facility rules and services.",
+    emoji: "🏋️",
+    sentences: [
+      { text: "Welcome to the campus fitness center.", difficulty: "short", time: 8 },
+      { text: "Your student ID is required for entry.", difficulty: "short", time: 8 },
+      { text: "The weight room is located on the second floor near the elevators.", difficulty: "medium", time: 10 },
+      { text: "Group fitness classes are offered every weekday morning and evening.", difficulty: "medium", time: 10 },
+      { text: "Please remember to wipe down the equipment after each use.", difficulty: "medium", time: 10 },
+      { text: "Lockers are available for daily use, but you will need to bring your own lock from home.", difficulty: "long", time: 12 },
+      { text: "If you would like to schedule a session with a personal trainer, you can sign up at the front desk or register online.", difficulty: "long", time: 12 }
+    ]
+  },
+  {
+    name: "University Library Orientation",
+    desc: "A librarian gives a tour to new students and explains borrowing procedures.",
+    emoji: "📚",
+    sentences: [
+      { text: "The library is open every day of the week.", difficulty: "short", time: 8 },
+      { text: "Books can be borrowed for up to three weeks.", difficulty: "short", time: 8 },
+      { text: "The reference section on the third floor cannot be checked out.", difficulty: "medium", time: 10 },
+      { text: "Study rooms can be reserved online for up to four hours at a time.", difficulty: "medium", time: 10 },
+      { text: "Late fees are automatically charged to your student account each semester.", difficulty: "medium", time: 10 },
+      { text: "If you need help finding a specific journal article, the research librarians are available at the information desk.", difficulty: "long", time: 12 },
+      { text: "The library also offers free workshops on academic writing and citation formats throughout the semester.", difficulty: "long", time: 12 }
+    ]
+  },
+  {
+    name: "Campus Housing Orientation",
+    desc: "A resident advisor explains rules and procedures for the dormitory.",
+    emoji: "🏠",
+    sentences: [
+      { text: "Quiet hours begin at ten o'clock each night.", difficulty: "short", time: 8 },
+      { text: "Guests must sign in at the front desk.", difficulty: "short", time: 8 },
+      { text: "Each floor has a shared kitchen with a microwave and refrigerator.", difficulty: "medium", time: 10 },
+      { text: "Laundry machines are located in the basement and require a campus card.", difficulty: "medium", time: 10 },
+      { text: "Maintenance requests can be submitted through the housing portal online.", difficulty: "medium", time: 10 },
+      { text: "If you are locked out of your room after midnight, you should contact campus security rather than the front desk.", difficulty: "long", time: 12 },
+      { text: "At the end of the semester, all personal belongings must be removed and the room must be cleaned before your checkout inspection.", difficulty: "long", time: 12 }
+    ]
+  },
+  {
+    name: "Art Gallery Visit",
+    desc: "A guide welcomes visitors and explains gallery rules.",
+    emoji: "🎨",
+    sentences: [
+      { text: "Welcome to the art gallery.", difficulty: "short", time: 8 },
+      { text: "A free audio guide is available for all visitors.", difficulty: "short", time: 8 },
+      { text: "Photography is not permitted inside the main exhibition halls.", difficulty: "medium", time: 10 },
+      { text: "The special collection on the second floor features works from local artists.", difficulty: "medium", time: 10 },
+      { text: "Please do not touch the artwork or lean against the display cases.", difficulty: "medium", time: 10 },
+      { text: "If you are interested in guided tours, they are offered twice daily at eleven in the morning and two in the afternoon.", difficulty: "long", time: 12 },
+      { text: "Before leaving the gallery, please make sure to return your audio guide to the reception desk at the main entrance.", difficulty: "long", time: 12 }
+    ]
+  },
+  {
+    name: "Campus Bookstore",
+    desc: "A store employee explains services and the textbook return policy.",
+    emoji: "📖",
+    sentences: [
+      { text: "The bookstore is next to the student center.", difficulty: "short", time: 8 },
+      { text: "Textbooks are arranged by department and course number.", difficulty: "short", time: 8 },
+      { text: "Used textbooks are available at a discounted price while supplies last.", difficulty: "medium", time: 10 },
+      { text: "You can order books online and pick them up at the service counter.", difficulty: "medium", time: 10 },
+      { text: "The store also sells university merchandise, school supplies, and electronics.", difficulty: "medium", time: 10 },
+      { text: "Full refunds are available within the first two weeks of the semester as long as you have the original receipt.", difficulty: "long", time: 12 },
+      { text: "If your course requires an access code for online materials, you can purchase it separately at the register or through the bookstore website.", difficulty: "long", time: 12 }
+    ]
+  },
+  {
+    name: "Recreation Center Tour",
+    desc: "A student worker gives a tour of the campus recreation center.",
+    emoji: "🏊",
+    sentences: [
+      { text: "The pool is open from six in the morning until nine at night.", difficulty: "short", time: 8 },
+      { text: "Towels are provided free of charge at the front desk.", difficulty: "short", time: 8 },
+      { text: "The indoor track on the upper level is available for jogging and walking.", difficulty: "medium", time: 10 },
+      { text: "Basketball and volleyball courts can be reserved up to two days in advance.", difficulty: "medium", time: 10 },
+      { text: "All students are required to attend a brief safety orientation before using the climbing wall.", difficulty: "medium", time: 10 },
+      { text: "Equipment such as rackets and balls can be borrowed from the equipment room with a valid student identification card.", difficulty: "long", time: 12 },
+      { text: "The recreation center will be closed for annual maintenance during the first week of January, so please plan your activities accordingly.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 7: Campus Dining Hall =====
+  {
+    name: "Campus Dining Hall",
+    desc: "A dining hall manager explains meal plan options and rules.",
+    emoji: "🍽️",
+    sentences: [
+      { text: "The dining hall is open for breakfast, lunch, and dinner.", difficulty: "short", time: 8 },
+      { text: "All meal plans include unlimited beverages.", difficulty: "short", time: 8 },
+      { text: "Students with dietary restrictions should speak with the chef on duty.", difficulty: "medium", time: 10 },
+      { text: "The salad bar and soup station are available during all meal periods.", difficulty: "medium", time: 10 },
+      { text: "Please return your tray and dishes to the conveyor belt when you are finished.", difficulty: "medium", time: 10 },
+      { text: "If you would like to upgrade your meal plan, you can do so through the housing portal before the end of the second week.", difficulty: "long", time: 12 },
+      { text: "Guests are welcome to eat in the dining hall, but they will need to purchase a visitor meal pass at the entrance.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 8: Student Health Center =====
+  {
+    name: "Student Health Center",
+    desc: "A nurse explains health center services and appointment procedures.",
+    emoji: "🏥",
+    sentences: [
+      { text: "The health center is open Monday through Friday.", difficulty: "short", time: 8 },
+      { text: "Walk-in appointments are available each morning.", difficulty: "short", time: 8 },
+      { text: "You will need to present your student ID card at the front desk.", difficulty: "medium", time: 10 },
+      { text: "Flu vaccinations are offered free of charge during the fall semester.", difficulty: "medium", time: 10 },
+      { text: "Prescriptions can be filled at the pharmacy located inside the building.", difficulty: "medium", time: 10 },
+      { text: "If you need to see a specialist, the health center staff can provide a referral to a doctor in the community.", difficulty: "long", time: 12 },
+      { text: "Students who are feeling seriously ill should call the emergency line rather than waiting for a scheduled appointment.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 9: Campus Shuttle Service =====
+  {
+    name: "Campus Shuttle Service",
+    desc: "A transportation coordinator explains the campus shuttle routes.",
+    emoji: "🚌",
+    sentences: [
+      { text: "The campus shuttle runs every fifteen minutes.", difficulty: "short", time: 8 },
+      { text: "All rides are free for registered students.", difficulty: "short", time: 8 },
+      { text: "The blue route connects the dormitories to the main academic buildings.", difficulty: "medium", time: 10 },
+      { text: "Evening service is available until midnight on weekdays and weekends.", difficulty: "medium", time: 10 },
+      { text: "You can track the shuttle in real time using the university's mobile application.", difficulty: "medium", time: 10 },
+      { text: "During final exams, the shuttle schedule is extended with additional routes to the library and study halls.", difficulty: "long", time: 12 },
+      { text: "If you need a ride to the airport during holiday breaks, you must sign up at least three days in advance through the transportation office.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 10: Science Laboratory =====
+  {
+    name: "Science Laboratory",
+    desc: "A lab instructor explains safety rules and equipment procedures.",
+    emoji: "🔬",
+    sentences: [
+      { text: "Safety goggles must be worn at all times.", difficulty: "short", time: 8 },
+      { text: "Closed-toe shoes are required in the lab.", difficulty: "short", time: 8 },
+      { text: "All chemicals should be returned to the storage cabinet after use.", difficulty: "medium", time: 10 },
+      { text: "Lab reports are due by the following Monday at the start of class.", difficulty: "medium", time: 10 },
+      { text: "Broken glassware should be placed in the designated disposal container, not the regular trash.", difficulty: "medium", time: 10 },
+      { text: "If a chemical spill occurs, notify the instructor immediately and follow the emergency procedures posted on the wall.", difficulty: "long", time: 12 },
+      { text: "Students must complete the online safety training module before they are permitted to use any laboratory equipment.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 11: Computer Lab =====
+  {
+    name: "Computer Lab",
+    desc: "A lab assistant explains the computer lab policies and printing services.",
+    emoji: "💻",
+    sentences: [
+      { text: "The computer lab is open twenty-four hours a day.", difficulty: "short", time: 8 },
+      { text: "Food and drinks are not allowed near the computers.", difficulty: "short", time: 8 },
+      { text: "Each student receives one hundred free pages of printing per semester.", difficulty: "medium", time: 10 },
+      { text: "Color printing costs ten cents per page and is available at the front station.", difficulty: "medium", time: 10 },
+      { text: "Please remember to log out of your account when you leave the workstation.", difficulty: "medium", time: 10 },
+      { text: "If you experience any technical problems with the software, please contact the help desk by phone or submit a request online.", difficulty: "long", time: 12 },
+      { text: "Students who need to use specialized design software can reserve a workstation in the multimedia room on the second floor.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 12: Career Services Center =====
+  {
+    name: "Career Services Center",
+    desc: "An advisor explains career counseling and job fair registration.",
+    emoji: "💼",
+    sentences: [
+      { text: "Career counseling appointments are free for all students.", difficulty: "short", time: 8 },
+      { text: "The job fair takes place every October and March.", difficulty: "short", time: 8 },
+      { text: "Resume reviews are available by appointment or during weekly drop-in hours.", difficulty: "medium", time: 10 },
+      { text: "The center maintains an online job board with internship and full-time listings.", difficulty: "medium", time: 10 },
+      { text: "Mock interviews can be scheduled with a career advisor to help you prepare.", difficulty: "medium", time: 10 },
+      { text: "If you are interested in attending the career fair, you should register online at least one week before the event.", difficulty: "long", time: 12 },
+      { text: "The career services center also offers workshops on professional networking, salary negotiation, and interview techniques throughout the year.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 13: Campus Post Office =====
+  {
+    name: "Campus Post Office",
+    desc: "A postal worker explains mail services and package pickup.",
+    emoji: "📬",
+    sentences: [
+      { text: "The campus post office is located in the student center.", difficulty: "short", time: 8 },
+      { text: "Mail is delivered to student boxes every weekday.", difficulty: "short", time: 8 },
+      { text: "You will receive an email notification when a package arrives for you.", difficulty: "medium", time: 10 },
+      { text: "Packages must be picked up within five business days or they will be returned.", difficulty: "medium", time: 10 },
+      { text: "Stamps, envelopes, and shipping supplies are available for purchase at the counter.", difficulty: "medium", time: 10 },
+      { text: "If you need to ship something internationally, the staff at the counter can help you fill out the customs form.", difficulty: "long", time: 12 },
+      { text: "During the holiday season, the post office extends its hours and opens an additional pickup window to handle the increased volume.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 14: Parking Services =====
+  {
+    name: "Parking Services",
+    desc: "A parking officer explains permits, rules, and available lots.",
+    emoji: "🅿️",
+    sentences: [
+      { text: "A valid parking permit is required in all campus lots.", difficulty: "short", time: 8 },
+      { text: "Visitor parking is available near the main entrance.", difficulty: "short", time: 8 },
+      { text: "Student permits can be purchased online through the transportation portal.", difficulty: "medium", time: 10 },
+      { text: "Vehicles parked without a permit will receive a citation and may be towed.", difficulty: "medium", time: 10 },
+      { text: "The parking garage behind the science building has spaces available on most weekdays.", difficulty: "medium", time: 10 },
+      { text: "If you receive a parking ticket that you believe was issued in error, you may file an appeal within ten business days.", difficulty: "long", time: 12 },
+      { text: "Students who carpool with at least two other registered students are eligible for a discounted permit and preferred parking spaces.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 15: Campus Museum =====
+  {
+    name: "Campus Museum",
+    desc: "A museum guide welcomes visitors and explains current exhibitions.",
+    emoji: "🏛️",
+    sentences: [
+      { text: "Admission to the museum is free for all students.", difficulty: "short", time: 8 },
+      { text: "The museum is open Tuesday through Sunday.", difficulty: "short", time: 8 },
+      { text: "The current exhibition features artifacts from ancient civilizations.", difficulty: "medium", time: 10 },
+      { text: "Guided tours begin at the information desk every hour on the hour.", difficulty: "medium", time: 10 },
+      { text: "Please do not use flash photography inside the exhibition halls.", difficulty: "medium", time: 10 },
+      { text: "The gift shop near the exit sells postcards, books, and replicas inspired by the museum's permanent collection.", difficulty: "long", time: 12 },
+      { text: "If you are interested in volunteering at the museum, you can fill out an application form at the front desk or apply online.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 16: Financial Aid Office =====
+  {
+    name: "Financial Aid Office",
+    desc: "A financial aid counselor explains scholarships and loan options.",
+    emoji: "🎓",
+    sentences: [
+      { text: "The financial aid office is on the third floor.", difficulty: "short", time: 8 },
+      { text: "All students should complete the application by March first.", difficulty: "short", time: 8 },
+      { text: "Scholarship recipients must maintain a minimum grade point average each semester.", difficulty: "medium", time: 10 },
+      { text: "Work-study positions are posted on the financial aid website at the beginning of each term.", difficulty: "medium", time: 10 },
+      { text: "Emergency loans are available for students who experience unexpected financial difficulties.", difficulty: "medium", time: 10 },
+      { text: "If you have questions about your financial aid package, you can schedule a one-on-one meeting with a counselor through the online portal.", difficulty: "long", time: 12 },
+      { text: "Students who receive outside scholarships are required to report them to the financial aid office so that their award package can be adjusted.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 17: Outdoor Adventure Center =====
+  {
+    name: "Outdoor Adventure Center",
+    desc: "A coordinator explains outdoor trips and equipment rental.",
+    emoji: "🏕️",
+    sentences: [
+      { text: "The adventure center organizes trips every weekend.", difficulty: "short", time: 8 },
+      { text: "Camping gear can be rented at a low cost.", difficulty: "short", time: 8 },
+      { text: "Upcoming trips include hiking, kayaking, and rock climbing excursions.", difficulty: "medium", time: 10 },
+      { text: "All participants must sign a liability waiver before joining any outdoor activity.", difficulty: "medium", time: 10 },
+      { text: "The center provides transportation to and from all off-campus trip locations.", difficulty: "medium", time: 10 },
+      { text: "If you would like to lead a trip, you must first complete the outdoor leadership training program offered each September.", difficulty: "long", time: 12 },
+      { text: "Equipment such as tents, sleeping bags, and backpacks should be returned clean and dry within two days of your trip.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 18: International Student Office =====
+  {
+    name: "International Student Office",
+    desc: "An advisor explains visa requirements and support services.",
+    emoji: "🌍",
+    sentences: [
+      { text: "The international student office is in the administration building.", difficulty: "short", time: 8 },
+      { text: "All international students must attend an orientation session.", difficulty: "short", time: 8 },
+      { text: "Visa documents should be submitted at least sixty days before your program starts.", difficulty: "medium", time: 10 },
+      { text: "The office hosts cultural exchange events and language practice groups each month.", difficulty: "medium", time: 10 },
+      { text: "Health insurance enrollment is mandatory for all students holding a student visa.", difficulty: "medium", time: 10 },
+      { text: "If you plan to travel outside the country during the semester, you must get your travel documents endorsed by an advisor before departure.", difficulty: "long", time: 12 },
+      { text: "The international student office also provides assistance with tax filing, employment authorization, and housing referrals for newly arrived students.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 19: Campus Radio Station =====
+  {
+    name: "Campus Radio Station",
+    desc: "A station manager explains how students can get involved.",
+    emoji: "📻",
+    sentences: [
+      { text: "The campus radio station broadcasts seven days a week.", difficulty: "short", time: 8 },
+      { text: "Anyone can apply to host a weekly show.", difficulty: "short", time: 8 },
+      { text: "New members are required to attend a training session on studio equipment.", difficulty: "medium", time: 10 },
+      { text: "The station plays a mix of music, news, and student-produced content.", difficulty: "medium", time: 10 },
+      { text: "All shows must follow the broadcasting guidelines posted in the control room.", difficulty: "medium", time: 10 },
+      { text: "If you are interested in hosting your own program, you should submit a show proposal by the end of the first week of classes.", difficulty: "long", time: 12 },
+      { text: "The radio station also covers live campus events such as sports games, concerts, and guest lectures throughout the academic year.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 20: Tutoring Center =====
+  {
+    name: "Tutoring Center",
+    desc: "A coordinator explains free tutoring services for students.",
+    emoji: "📝",
+    sentences: [
+      { text: "Tutoring sessions are free for all enrolled students.", difficulty: "short", time: 8 },
+      { text: "Walk-in tutoring is available every afternoon.", difficulty: "short", time: 8 },
+      { text: "Tutors are available for most introductory and intermediate level courses.", difficulty: "medium", time: 10 },
+      { text: "Group study sessions are held in the large conference room on Thursday evenings.", difficulty: "medium", time: 10 },
+      { text: "Students who want regular weekly sessions should register online at the beginning of the term.", difficulty: "medium", time: 10 },
+      { text: "If the subject you need help with is not listed on our website, please contact the center and we will try to find a qualified tutor.", difficulty: "long", time: 12 },
+      { text: "The tutoring center also offers workshops on time management, study strategies, and test preparation during the weeks before midterms and finals.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 21: Student Government Office =====
+  {
+    name: "Student Government Office",
+    desc: "A student representative explains how to get involved in campus governance.",
+    emoji: "🗳️",
+    sentences: [
+      { text: "Student government elections are held every spring.", difficulty: "short", time: 8 },
+      { text: "Meetings are open to all students on campus.", difficulty: "short", time: 8 },
+      { text: "Candidates must collect fifty signatures to appear on the official ballot.", difficulty: "medium", time: 10 },
+      { text: "The student government manages a budget that funds clubs and campus events.", difficulty: "medium", time: 10 },
+      { text: "Anyone can submit a proposal for a new campus initiative through the online form.", difficulty: "medium", time: 10 },
+      { text: "If you are interested in running for a position, you should attend an information session held during the first week of February.", difficulty: "long", time: 12 },
+      { text: "The student government also appoints representatives to university committees that make decisions about tuition, housing, and academic policies.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 22: Campus Garden =====
+  {
+    name: "Campus Community Garden",
+    desc: "A garden coordinator explains plot rentals and gardening rules.",
+    emoji: "🌻",
+    sentences: [
+      { text: "The community garden is behind the environmental studies building.", difficulty: "short", time: 8 },
+      { text: "Garden plots are available on a first come first served basis.", difficulty: "short", time: 8 },
+      { text: "Each plot measures approximately four feet by eight feet.", difficulty: "medium", time: 10 },
+      { text: "Gardeners are responsible for weeding and watering their own plots regularly.", difficulty: "medium", time: 10 },
+      { text: "Tools, seeds, and compost are provided in the shared supply shed near the entrance.", difficulty: "medium", time: 10 },
+      { text: "If you would like to reserve a plot for the growing season, you need to sign up at the sustainability office before the end of March.", difficulty: "long", time: 12 },
+      { text: "The garden also hosts educational workshops on organic farming techniques and sustainable food practices every other Saturday morning.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 23: Music Practice Rooms =====
+  {
+    name: "Music Practice Rooms",
+    desc: "A music department assistant explains room reservation and instrument policies.",
+    emoji: "🎵",
+    sentences: [
+      { text: "Practice rooms are located on the basement level.", difficulty: "short", time: 8 },
+      { text: "Each room has a piano and a music stand.", difficulty: "short", time: 8 },
+      { text: "Rooms can be reserved for up to two hours at a time online.", difficulty: "medium", time: 10 },
+      { text: "Students who are not music majors may use the rooms when they are not reserved.", difficulty: "medium", time: 10 },
+      { text: "Please keep the volume at a reasonable level and close the door while practicing.", difficulty: "medium", time: 10 },
+      { text: "Instruments from the department collection can be borrowed for the semester, but you must fill out a loan agreement first.", difficulty: "long", time: 12 },
+      { text: "If a practice room is damaged or a piece of equipment is not working properly, please report it to the front office immediately.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 24: Campus Counseling Center =====
+  {
+    name: "Campus Counseling Center",
+    desc: "A counselor explains mental health services and how to book sessions.",
+    emoji: "🧠",
+    sentences: [
+      { text: "Counseling services are confidential and free of charge.", difficulty: "short", time: 8 },
+      { text: "The center is open from nine to five on weekdays.", difficulty: "short", time: 8 },
+      { text: "Students can schedule an initial consultation by calling or visiting the office.", difficulty: "medium", time: 10 },
+      { text: "Group therapy sessions are offered on various topics throughout the semester.", difficulty: "medium", time: 10 },
+      { text: "In a crisis situation, a counselor is available around the clock through the emergency hotline.", difficulty: "medium", time: 10 },
+      { text: "If you would prefer to meet with a specific counselor, you may request that person when you schedule your appointment.", difficulty: "long", time: 12 },
+      { text: "The center also runs peer support programs where trained student volunteers provide a safe space to talk about stress and adjustment challenges.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 25: Campus Sustainability Office =====
+  {
+    name: "Campus Sustainability Office",
+    desc: "A coordinator explains recycling programs and green initiatives.",
+    emoji: "♻️",
+    sentences: [
+      { text: "Recycling bins are located in every campus building.", difficulty: "short", time: 8 },
+      { text: "The university aims to be carbon neutral by twenty thirty.", difficulty: "short", time: 8 },
+      { text: "Students can borrow reusable containers from any campus dining location.", difficulty: "medium", time: 10 },
+      { text: "The sustainability office organizes a campus cleanup event at the end of each semester.", difficulty: "medium", time: 10 },
+      { text: "Electronic waste should be dropped off at the collection point in the parking garage.", difficulty: "medium", time: 10 },
+      { text: "If you have an idea for a new sustainability project, you can apply for a green initiative grant through the sustainability office website.", difficulty: "long", time: 12 },
+      { text: "The office also partners with local organizations to provide volunteer opportunities related to environmental conservation and community education.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 26: Study Abroad Office =====
+  {
+    name: "Study Abroad Office",
+    desc: "An advisor explains program options and application deadlines.",
+    emoji: "✈️",
+    sentences: [
+      { text: "The study abroad office is on the second floor of the student center.", difficulty: "short", time: 8 },
+      { text: "Programs are available in over forty countries.", difficulty: "short", time: 8 },
+      { text: "Applications for the spring semester are due by the first of October.", difficulty: "medium", time: 10 },
+      { text: "Most financial aid and scholarships can be applied toward study abroad costs.", difficulty: "medium", time: 10 },
+      { text: "Students must have a minimum grade point average of two point five to be eligible.", difficulty: "medium", time: 10 },
+      { text: "If you are unsure which program is right for you, we recommend attending one of our weekly information sessions held every Wednesday afternoon.", difficulty: "long", time: 12 },
+      { text: "Students who have participated in a study abroad program are encouraged to share their experiences as peer advisors to help incoming applicants.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 27: Campus Theater =====
+  {
+    name: "Campus Theater",
+    desc: "A stage manager explains auditions, performances, and volunteer opportunities.",
+    emoji: "🎭",
+    sentences: [
+      { text: "The campus theater seats three hundred people.", difficulty: "short", time: 8 },
+      { text: "Auditions for the fall production are next week.", difficulty: "short", time: 8 },
+      { text: "Students from any major are welcome to audition for roles in our shows.", difficulty: "medium", time: 10 },
+      { text: "Volunteer positions are available for lighting, sound, and set construction crews.", difficulty: "medium", time: 10 },
+      { text: "Tickets go on sale two weeks before each performance at the box office.", difficulty: "medium", time: 10 },
+      { text: "If you are interested in joining the production team, please sign up on the bulletin board outside the theater entrance.", difficulty: "long", time: 12 },
+      { text: "The theater department also invites professional actors and directors to lead workshops and master classes several times throughout the year.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 28: Botanical Garden =====
+  {
+    name: "Botanical Garden",
+    desc: "A guide explains the garden layout and visitor information.",
+    emoji: "🌿",
+    sentences: [
+      { text: "The botanical garden is open daily from dawn to dusk.", difficulty: "short", time: 8 },
+      { text: "Admission is free for members of the university.", difficulty: "short", time: 8 },
+      { text: "The tropical greenhouse maintains a constant temperature of eighty degrees.", difficulty: "medium", time: 10 },
+      { text: "Guided nature walks are offered every Saturday morning at ten o'clock.", difficulty: "medium", time: 10 },
+      { text: "Visitors are asked to stay on the designated paths and not pick any plants.", difficulty: "medium", time: 10 },
+      { text: "The garden contains over five hundred species of native and exotic plants arranged in separate themed sections.", difficulty: "long", time: 12 },
+      { text: "If you would like to host a private event in the garden, you must submit a reservation request at least four weeks in advance through our website.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 29: Campus Emergency Services =====
+  {
+    name: "Campus Emergency Services",
+    desc: "A safety officer explains emergency procedures and resources.",
+    emoji: "🚨",
+    sentences: [
+      { text: "Campus security is available around the clock.", difficulty: "short", time: 8 },
+      { text: "Emergency call boxes are located throughout the campus.", difficulty: "short", time: 8 },
+      { text: "In case of a fire, exit the building immediately using the nearest stairway.", difficulty: "medium", time: 10 },
+      { text: "The safety escort service will walk you to your car or dormitory after dark.", difficulty: "medium", time: 10 },
+      { text: "All students should download the campus safety app to receive emergency alerts.", difficulty: "medium", time: 10 },
+      { text: "If you witness a suspicious activity or feel unsafe, call the campus security number listed on the back of your student identification card.", difficulty: "long", time: 12 },
+      { text: "The university conducts fire drills and emergency preparedness exercises at least once each semester so that students know what to do in a real situation.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 30: Athletic Department =====
+  {
+    name: "Athletic Department",
+    desc: "A coach explains tryouts, schedules, and athletic facilities.",
+    emoji: "🏆",
+    sentences: [
+      { text: "Tryouts for fall sports begin in the first week of September.", difficulty: "short", time: 8 },
+      { text: "All athletes must pass a physical examination first.", difficulty: "short", time: 8 },
+      { text: "Practice schedules are posted on the athletic department website each week.", difficulty: "medium", time: 10 },
+      { text: "Student athletes are expected to maintain satisfactory academic standing throughout the season.", difficulty: "medium", time: 10 },
+      { text: "The training room is equipped with ice baths, therapy tables, and rehabilitation equipment.", difficulty: "medium", time: 10 },
+      { text: "If you are injured during practice or a game, you should report to the athletic trainer before leaving the facility.", difficulty: "long", time: 12 },
+      { text: "The athletic department offers scholarships to outstanding athletes who demonstrate both competitive excellence and strong academic performance.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 31: Writing Center =====
+  {
+    name: "Writing Center",
+    desc: "A writing tutor explains services for improving academic papers.",
+    emoji: "✍️",
+    sentences: [
+      { text: "The writing center is on the first floor of the library.", difficulty: "short", time: 8 },
+      { text: "Sessions last approximately thirty minutes each.", difficulty: "short", time: 8 },
+      { text: "Tutors can help with brainstorming, outlining, drafting, and revising your papers.", difficulty: "medium", time: 10 },
+      { text: "We encourage students to bring a copy of the assignment instructions along with their draft.", difficulty: "medium", time: 10 },
+      { text: "Online appointments are available for students who cannot visit the center in person.", difficulty: "medium", time: 10 },
+      { text: "If you are working on a thesis or dissertation, we offer extended sessions that can be scheduled by contacting the center directly.", difficulty: "long", time: 12 },
+      { text: "The writing center also maintains a collection of handouts and online resources covering grammar, citation styles, and academic writing conventions.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 32: Campus IT Help Desk =====
+  {
+    name: "Campus IT Help Desk",
+    desc: "A technician explains tech support services and Wi-Fi setup.",
+    emoji: "🖥️",
+    sentences: [
+      { text: "The IT help desk is located in the technology building.", difficulty: "short", time: 8 },
+      { text: "Wi-Fi is available across the entire campus.", difficulty: "short", time: 8 },
+      { text: "To connect to the network, use your student email address and password.", difficulty: "medium", time: 10 },
+      { text: "Software updates and antivirus programs are available for free download on the IT website.", difficulty: "medium", time: 10 },
+      { text: "If your laptop needs repair, you can drop it off at the service window during business hours.", difficulty: "medium", time: 10 },
+      { text: "Students who forget their password can reset it online or visit the help desk with a valid photo identification.", difficulty: "long", time: 12 },
+      { text: "The IT department also offers short training sessions on cloud storage, data backup, and cybersecurity best practices at the beginning of each semester.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 33: Student Newspaper =====
+  {
+    name: "Student Newspaper",
+    desc: "An editor explains how to join the newspaper staff and submit articles.",
+    emoji: "📰",
+    sentences: [
+      { text: "The student newspaper is published every two weeks.", difficulty: "short", time: 8 },
+      { text: "Writers, editors, and photographers are always needed.", difficulty: "short", time: 8 },
+      { text: "Editorial meetings are held every Monday evening in the media center.", difficulty: "medium", time: 10 },
+      { text: "You do not need to be a journalism major to contribute articles to the paper.", difficulty: "medium", time: 10 },
+      { text: "Article submissions should be sent to the editor by email before the Friday deadline.", difficulty: "medium", time: 10 },
+      { text: "If you are interested in joining the staff, you should attend a meeting and bring a short writing sample for the editors to review.", difficulty: "long", time: 12 },
+      { text: "The newspaper also has an online edition that publishes additional content including opinion pieces, photo essays, and video interviews.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 34: Campus Laundry Facility =====
+  {
+    name: "Campus Laundry Facility",
+    desc: "A resident assistant explains the laundry room rules and procedures.",
+    emoji: "🧺",
+    sentences: [
+      { text: "The laundry room is open from seven in the morning until eleven at night.", difficulty: "short", time: 8 },
+      { text: "Machines accept campus card payments only.", difficulty: "short", time: 8 },
+      { text: "Please remove your clothes promptly when the cycle is finished.", difficulty: "medium", time: 10 },
+      { text: "Detergent and dryer sheets can be purchased from the vending machine by the door.", difficulty: "medium", time: 10 },
+      { text: "Do not overload the machines, as this may cause damage and delay your laundry.", difficulty: "medium", time: 10 },
+      { text: "If a machine is not working properly, please report it using the maintenance request form posted on the bulletin board.", difficulty: "long", time: 12 },
+      { text: "Items left in the machines or on the folding tables for more than twenty-four hours will be moved to the lost and found bin in the lobby.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 35: Campus Pharmacy =====
+  {
+    name: "Campus Pharmacy",
+    desc: "A pharmacist explains prescription services and operating hours.",
+    emoji: "💊",
+    sentences: [
+      { text: "The pharmacy is inside the student health center.", difficulty: "short", time: 8 },
+      { text: "Most common prescriptions can be filled the same day.", difficulty: "short", time: 8 },
+      { text: "Over-the-counter medications are available on the shelves near the entrance.", difficulty: "medium", time: 10 },
+      { text: "Your student health insurance covers a portion of most prescription costs.", difficulty: "medium", time: 10 },
+      { text: "Refill requests can be submitted online or by calling the pharmacy directly.", difficulty: "medium", time: 10 },
+      { text: "If you take medication regularly, we recommend setting up automatic refills so that you never run out during the semester.", difficulty: "long", time: 12 },
+      { text: "The pharmacy also provides free consultations where a pharmacist can answer your questions about side effects, dosages, and drug interactions.", difficulty: "long", time: 12 }
+    ]
+  },
+  // ===== 36: Weather Broadcast =====
+  {
+    name: "Campus Weather Broadcast",
+    desc: "A campus news anchor delivers the weekly weather and safety update.",
+    emoji: "🌦️",
+    sentences: [
+      { text: "Today's high temperature will be around seventy-five degrees.", difficulty: "short", time: 8 },
+      { text: "Clear skies are expected through the end of the week.", difficulty: "short", time: 8 },
+      { text: "A cold front is expected to arrive by early next week bringing cooler temperatures.", difficulty: "medium", time: 10 },
+      { text: "Students should dress warmly and carry an umbrella starting on Monday.", difficulty: "medium", time: 10 },
+      { text: "Campus walkways may be slippery after the rain, so please watch your step.", difficulty: "medium", time: 10 },
+      { text: "If severe weather is reported in the area, the university will send an alert through the emergency notification system on your phone.", difficulty: "long", time: 12 },
+      { text: "In the event of a winter storm or hazardous road conditions, the university may cancel classes and post an announcement on the main website by six in the morning.", difficulty: "long", time: 12 }
+    ]
+  }
+];
+
+// ===== STATE =====
+let currentScenario = null;
+let currentSentenceIdx = 0;
+let mediaRecorder = null;
+let audioChunks = [];
+let recordingBlob = null;
+let timerInterval = null;
+let audioContext = null;
+let analyser = null;
+let animFrame = null;
+let recognition = null;
+let finalTranscript = '';
+let interimTranscript = '';
+
+// Session results
+let sessionResults = [];
+
+// ===== INIT =====
+window.addEventListener('DOMContentLoaded', () => {
+  buildScenarioGrid();
+  populateVoices();
+  initVisualizer();
+  initSpeechRecognition();
+  document.getElementById('speedRange').addEventListener('input', e => {
+    document.getElementById('speedValue').textContent = e.target.value + 'x';
+  });
+  speechSynthesis.onvoiceschanged = populateVoices;
+});
+
+function buildScenarioGrid() {
+  const grid = document.getElementById('scenarioGrid');
+  grid.innerHTML = '';
+  SCENARIOS.forEach((s, i) => {
+    const card = document.createElement('div');
+    card.className = 'scenario-card';
+    card.innerHTML = `<h3>${s.emoji} ${s.name}</h3><p>${s.desc}</p><p style="margin-top:4px;font-size:11px;color:var(--primary)">7 sentences</p>`;
+    card.onclick = () => startScenario(i);
+    grid.appendChild(card);
+  });
+}
+
+function populateVoices() {
+  const sel = document.getElementById('voiceSelect');
+  const voices = speechSynthesis.getVoices();
+  sel.innerHTML = '';
+  const en = voices.filter(v => v.lang.startsWith('en'));
+  (en.length ? en : voices).forEach(v => {
+    const opt = document.createElement('option');
+    opt.value = v.name;
+    opt.textContent = `${v.name} (${v.lang})`;
+    if (v.name.includes('Samantha') || v.name.includes('Google US') || v.name.includes('Daniel')) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function initVisualizer() {
+  const w = document.getElementById('visualizer');
+  w.innerHTML = '';
+  for (let i = 0; i < 40; i++) { const b = document.createElement('div'); b.className = 'bar'; w.appendChild(b); }
+}
+
+function initSpeechRecognition() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  recognition = new SR();
+  recognition.continuous = true;
+  recognition.interimResults = true;
+  recognition.lang = 'en-US';
+  recognition.onresult = e => {
+    interimTranscript = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) finalTranscript += e.results[i][0].transcript + ' ';
+      else interimTranscript += e.results[i][0].transcript;
+    }
+    updateLiveTranscript();
+  };
+  recognition.onerror = () => {};
+  recognition.onend = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') try { recognition.start(); } catch(e) {}
+  };
+}
+
+function updateLiveTranscript() {
+  const el = document.getElementById('transcriptLive');
+  if (el.style.display === 'none') return;
+  if (!finalTranscript && !interimTranscript) el.innerHTML = '<span class="placeholder">Listening to your voice...</span>';
+  else el.innerHTML = finalTranscript + '<span class="interim">' + interimTranscript + '</span>';
+}
+
+// ===== NAVIGATION =====
+function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.classList.remove('active')); document.getElementById(id).classList.add('active'); }
+
+function goHome() {
+  stopEverything();
+  showScreen('screenHome');
+  document.getElementById('taskCounter').textContent = '--';
+  if (sessionResults.length) document.getElementById('reportBtnWrap').style.display = 'block';
+}
+
+function startScenario(idx) {
+  currentScenario = idx;
+  currentSentenceIdx = 0;
+  scenarioResults = [];
+  loadSentence();
+  showScreen('screenTask');
+}
+
+function nextSentence() {
+  // Not used for manual advance anymore, kept for compatibility
+  const sc = SCENARIOS[currentScenario];
+  if (currentSentenceIdx >= sc.sentences.length - 1) {
+    showScenarioReport();
+    return;
+  }
+  currentSentenceIdx++;
+  stopEverything();
+  loadSentence();
+}
+
+function skipSentence() {
+  const sc = SCENARIOS[currentScenario];
+  const sent = sc.sentences[currentSentenceIdx];
+  const skipEntry = { scenario: sc.name, sentenceIdx: currentSentenceIdx + 1, original: sent.text, transcript: '', difficulty: sent.difficulty, scores: null, skipped: true };
+  scenarioResults.push(skipEntry);
+  sessionResults.push(skipEntry);
+
+  if (currentSentenceIdx >= 6) {
+    showScenarioReport();
+  } else {
+    currentSentenceIdx++;
+    stopEverything();
+    loadSentence();
+  }
+}
+
+function loadSentence() {
+  const sc = SCENARIOS[currentScenario];
+  const sent = sc.sentences[currentSentenceIdx];
+  const n = currentSentenceIdx + 1;
+
+  document.getElementById('taskCounter').textContent = `${n} / 7`;
+  document.getElementById('sentenceLabel').textContent = `${sc.name} — Sentence ${n} of 7`;
+  document.getElementById('progressFill').style.width = `${(n / 7) * 100}%`;
+  document.getElementById('scenarioImg').textContent = sc.emoji;
+  document.getElementById('scenarioTitle').textContent = sc.name;
+  document.getElementById('scenarioDesc').textContent = sc.desc;
+
+  const diffColor = sent.difficulty === 'short' ? 'var(--success)' : sent.difficulty === 'medium' ? 'var(--primary)' : 'var(--orange)';
+  document.getElementById('sentenceLabel').innerHTML = `${sc.name} — Sentence ${n} of 7 <span class="sentence-difficulty" style="background:${diffColor}">${sent.difficulty} (${sent.time}s)</span>`;
+
+  // Reset UI
+  document.getElementById('afterRecord').style.display = 'none';
+  document.getElementById('transcriptLive').style.display = 'none';
+  document.getElementById('btnPlay').style.display = '';
+  document.getElementById('btnPlay').disabled = false;
+  document.getElementById('btnPlay').textContent = 'Play Sentence';
+  document.getElementById('btnSkip').style.display = '';
+  setStatus('ready', 'Press Play to hear the sentence');
+  document.getElementById('timer').textContent = '--';
+  document.getElementById('timer').className = 'timer';
+  document.getElementById('timerLabel').textContent = '';
+  resetBars();
+  finalTranscript = '';
+  interimTranscript = '';
+}
+
+// ===== PLAY PROMPT (TTS) =====
+function playPrompt() {
+  const sc = SCENARIOS[currentScenario];
+  const sent = sc.sentences[currentSentenceIdx];
+
+  document.getElementById('btnPlay').disabled = true;
+  setStatus('listening', 'Listen carefully...');
+
+  const utt = new SpeechSynthesisUtterance(sent.text);
+  const vName = document.getElementById('voiceSelect').value;
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(v => v.name === vName);
+  if (v) utt.voice = v;
+  utt.rate = parseFloat(document.getElementById('speedRange').value);
+  utt.pitch = 1;
+
+  let speaking = true;
+  function anim() { if (!speaking) return; document.querySelectorAll('#visualizer .bar').forEach(b => { b.style.height = (Math.random()*40+6)+'px'; }); animFrame = requestAnimationFrame(anim); }
+  anim();
+
+  utt.onend = () => {
+    speaking = false;
+    cancelAnimationFrame(animFrame);
+    resetBars();
+    // 1 second pause, then auto-start recording
+    setStatus('done', 'Get ready to repeat...');
+    document.getElementById('timer').textContent = '...';
+    document.getElementById('timerLabel').textContent = 'Recording starts in 1 second';
+    setTimeout(() => startRecording(), 1000);
+  };
+
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utt);
+}
+
+// ===== RECORDING =====
+async function startRecording() {
+  const sc = SCENARIOS[currentScenario];
+  const sent = sc.sentences[currentSentenceIdx];
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    audioChunks = [];
+    finalTranscript = '';
+    interimTranscript = '';
+
+    mediaRecorder = new MediaRecorder(stream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = () => {
+      recordingBlob = new Blob(audioChunks, { type: 'audio/webm' });
+      stream.getTracks().forEach(t => t.stop());
+      cancelAnimationFrame(animFrame);
+      resetBars();
+
+      // Silently evaluate and auto-advance
+      evaluateSentence();
+    };
+
+    mediaRecorder.start();
+    if (recognition) try { recognition.start(); } catch(e) {}
+
+    document.getElementById('transcriptLive').style.display = 'block';
+    updateLiveTranscript();
+    document.getElementById('btnPlay').style.display = 'none';
+    setStatus('recording', 'Repeat the sentence now!');
+
+    // Mic visualizer
+    audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    analyser = audioContext.createAnalyser();
+    analyser.fftSize = 128;
+    source.connect(analyser);
+    const dataArr = new Uint8Array(analyser.frequencyBinCount);
+    function draw() {
+      analyser.getByteFrequencyData(dataArr);
+      document.querySelectorAll('#visualizer .bar').forEach((b,i) => {
+        const val = dataArr[i % dataArr.length];
+        b.style.height = Math.max(4, val/4) + 'px';
+        b.style.background = `hsl(${210+val/3},80%,55%)`;
+      });
+      animFrame = requestAnimationFrame(draw);
+    }
+    draw();
+
+    // Timer
+    startTimer(sent.time, 'Recording Time', () => { stopRecording(); });
+
+  } catch (err) {
+    alert('Microphone access is required.\n\n' + err.message);
+    document.getElementById('btnPlay').style.display = '';
+    document.getElementById('btnPlay').disabled = false;
+  }
+}
+
+function stopRecording() {
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  if (recognition) try { recognition.stop(); } catch(e) {}
+  clearInterval(timerInterval);
+}
+
+// ===== TIMER =====
+function startTimer(seconds, label, onDone) {
+  clearInterval(timerInterval);
+  let rem = seconds;
+  const el = document.getElementById('timer');
+  document.getElementById('timerLabel').textContent = label;
+  function tick() {
+    el.textContent = rem;
+    el.className = 'timer';
+    if (rem <= 3) el.classList.add('critical');
+    else if (rem <= 5) el.classList.add('warning');
+    if (rem <= 0) { clearInterval(timerInterval); if (onDone) onDone(); }
+    rem--;
+  }
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+// ===== HELPERS =====
+function setStatus(s, t) { document.getElementById('statusDot').className='status-dot '+s; document.getElementById('statusText').textContent=t; }
+function resetBars() { document.querySelectorAll('#visualizer .bar').forEach(b=>{b.style.height='6px';b.style.background='var(--primary)'}); }
+function stopEverything() {
+  speechSynthesis.cancel(); clearInterval(timerInterval); cancelAnimationFrame(animFrame);
+  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+  if (recognition) try { recognition.stop(); } catch(e) {}
+  if (audioContext) { audioContext.close().catch(()=>{}); audioContext = null; }
+  resetBars();
+}
+
+// ================================================================
+// ===== EVALUATION ENGINE (TOEFL iBT 2026 Listen & Repeat) =======
+// ================================================================
+// Scoring: 0–5 scale per ETS rubric
+// Dimensions: Repeat Accuracy, Pronunciation/Intelligibility, Fluency
+
+// Stores results for the current scenario run (7 sentences)
+let scenarioResults = [];
+
+function evaluateSentence() {
+  const sc = SCENARIOS[currentScenario];
+  const sent = sc.sentences[currentSentenceIdx];
+  const original = sent.text.trim();
+  const spoken = finalTranscript.trim();
+
+  const scores = computeScores(original, spoken);
+
+  // Save to scenario results (for end-of-scenario report)
+  scenarioResults.push({
+    scenario: sc.name,
+    sentenceIdx: currentSentenceIdx + 1,
+    original: original,
+    transcript: spoken,
+    difficulty: sent.difficulty,
+    scores: scores,
+    skipped: false
+  });
+
+  // Also add to global session
+  sessionResults.push(scenarioResults[scenarioResults.length - 1]);
+
+  // Show brief confirmation
+  const isLast = currentSentenceIdx >= 6;
+  document.getElementById('afterRecord').style.display = 'block';
+  document.getElementById('savedMsg').textContent = isLast
+    ? 'All 7 sentences complete! Loading your report...'
+    : `Sentence ${currentSentenceIdx + 1} of 7 saved! Next sentence in 2s...`;
+  document.getElementById('btnSkip').style.display = 'none';
+  setStatus('done', isLast ? 'Scenario complete!' : 'Saved');
+
+  // Auto-advance after brief pause
+  setTimeout(() => {
+    if (isLast) {
+      showScenarioReport();
+    } else {
+      currentSentenceIdx++;
+      stopEverything();
+      loadSentence();
+    }
+  }, isLast ? 1500 : 2000);
+}
+
+function normalizeText(t) {
+  return t.toLowerCase()
+    .replace(/['']/g, "'")
+    .replace(/[^a-z0-9' ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+function getWords(t) { return normalizeText(t).split(' ').filter(w => w.length > 0); }
+
+// Levenshtein distance on word arrays
+function wordEditDistance(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, () => Array(n+1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (a[i-1] === b[j-1]) dp[i][j] = dp[i-1][j-1];
+      else dp[i][j] = 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+// Character-level similarity for individual words (pronunciation proxy)
+function charSimilarity(a, b) {
+  if (a === b) return 1;
+  const maxLen = Math.max(a.length, b.length);
+  if (maxLen === 0) return 1;
+  // Simple char-level edit distance
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, () => Array(n+1).fill(0));
+  for (let i = 0; i <= m; i++) dp[i][0] = i;
+  for (let j = 0; j <= n; j++) dp[0][j] = j;
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (a[i-1] === b[j-1]) dp[i][j] = dp[i-1][j-1];
+      else dp[i][j] = 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    }
+  }
+  return 1 - dp[m][n] / maxLen;
+}
+
+function computeScores(original, spoken) {
+  const origWords = getWords(original);
+  const spokenWords = getWords(spoken);
+
+  if (spokenWords.length === 0) {
+    return { overall: 0, accuracy: 0, intelligibility: 0, fluency: 0, detail: { wordEditDist: origWords.length, origLen: origWords.length, spokenLen: 0, matchedWords: 0, avgCharSim: 0, lengthRatio: 0 }};
+  }
+
+  // ---- REPEAT ACCURACY (word-level edit distance) ----
+  const wed = wordEditDistance(origWords, spokenWords);
+  const maxWed = Math.max(origWords.length, spokenWords.length);
+  const accuracyRatio = 1 - (wed / maxWed);
+
+  let accuracyScore;
+  if (accuracyRatio >= 0.98) accuracyScore = 5;
+  else if (accuracyRatio >= 0.90) accuracyScore = 4;
+  else if (accuracyRatio >= 0.75) accuracyScore = 3;
+  else if (accuracyRatio >= 0.55) accuracyScore = 2;
+  else if (accuracyRatio >= 0.30) accuracyScore = 1;
+  else accuracyScore = 0;
+
+  // ---- INTELLIGIBILITY / PRONUNCIATION ----
+  // Align words and check char-level similarity (proxy for pronunciation)
+  let totalCharSim = 0;
+  let compared = 0;
+  const minLen = Math.min(origWords.length, spokenWords.length);
+  // Simple alignment: compare in order up to minLen
+  for (let i = 0; i < minLen; i++) {
+    totalCharSim += charSimilarity(origWords[i], spokenWords[i]);
+    compared++;
+  }
+  const avgCharSim = compared > 0 ? totalCharSim / compared : 0;
+
+  // Also count exact word matches
+  const spokenSet = new Set(spokenWords);
+  const matchedWords = origWords.filter(w => spokenSet.has(w)).length;
+  const matchRatio = matchedWords / origWords.length;
+
+  const intellRaw = (avgCharSim * 0.6 + matchRatio * 0.4);
+  let intelligibilityScore;
+  if (intellRaw >= 0.95) intelligibilityScore = 5;
+  else if (intellRaw >= 0.85) intelligibilityScore = 4;
+  else if (intellRaw >= 0.70) intelligibilityScore = 3;
+  else if (intellRaw >= 0.50) intelligibilityScore = 2;
+  else if (intellRaw >= 0.25) intelligibilityScore = 1;
+  else intelligibilityScore = 0;
+
+  // ---- FLUENCY ----
+  // Length ratio (did they say roughly the right amount?)
+  const lengthRatio = spokenWords.length / origWords.length;
+  let fluencyLen;
+  if (lengthRatio >= 0.85 && lengthRatio <= 1.15) fluencyLen = 5;
+  else if (lengthRatio >= 0.70 && lengthRatio <= 1.30) fluencyLen = 4;
+  else if (lengthRatio >= 0.50 && lengthRatio <= 1.50) fluencyLen = 3;
+  else if (lengthRatio >= 0.30) fluencyLen = 2;
+  else fluencyLen = 1;
+
+  // Word order (longest common subsequence ratio)
+  const lcsLen = longestCommonSubseq(origWords, spokenWords);
+  const orderRatio = lcsLen / origWords.length;
+  let fluencyOrder;
+  if (orderRatio >= 0.95) fluencyOrder = 5;
+  else if (orderRatio >= 0.80) fluencyOrder = 4;
+  else if (orderRatio >= 0.60) fluencyOrder = 3;
+  else if (orderRatio >= 0.40) fluencyOrder = 2;
+  else fluencyOrder = 1;
+
+  const fluencyScore = Math.round((fluencyLen + fluencyOrder) / 2 * 10) / 10;
+
+  // ---- OVERALL ----
+  // ETS weights accuracy heaviest
+  const overall = Math.round((accuracyScore * 0.50 + intelligibilityScore * 0.25 + fluencyScore * 0.25) * 10) / 10;
+
+  return {
+    overall,
+    accuracy: accuracyScore,
+    intelligibility: intelligibilityScore,
+    fluency: fluencyScore,
+    detail: {
+      wordEditDist: wed,
+      origLen: origWords.length,
+      spokenLen: spokenWords.length,
+      matchedWords,
+      avgCharSim: Math.round(avgCharSim * 100),
+      lengthRatio: Math.round(lengthRatio * 100),
+      orderRatio: Math.round(orderRatio * 100),
+      accuracyPct: Math.round(accuracyRatio * 100)
+    }
+  };
+}
+
+function longestCommonSubseq(a, b) {
+  const m = a.length, n = b.length;
+  const dp = Array.from({length: m+1}, () => Array(n+1).fill(0));
+  for (let i = 1; i <= m; i++) {
+    for (let j = 1; j <= n; j++) {
+      if (a[i-1] === b[j-1]) dp[i][j] = dp[i-1][j-1] + 1;
+      else dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+    }
+  }
+  return dp[m][n];
+}
+
+function sc(score) { // color
+  if (score >= 4.5) return 'var(--success)';
+  if (score >= 3.5) return '#1a73e8';
+  if (score >= 2.5) return 'var(--orange)';
+  return 'var(--danger)';
+}
+
+function sl(score) { // label
+  if (score >= 4.5) return 'Perfect';
+  if (score >= 3.5) return 'Good';
+  if (score >= 2.5) return 'Fair';
+  if (score >= 1.5) return 'Limited';
+  return 'Weak';
+}
+
+// renderEvalResult removed — evaluation is now shown only in the end-of-scenario report
+
+// ===== SCENARIO REPORT (shown after all 7 sentences) =====
+function showScenarioReport() {
+  stopEverything();
+  showScreen('screenReport');
+
+  const sc = SCENARIOS[currentScenario];
+  const results = scenarioResults;
+  const evaluated = results.filter(r => r.scores && !r.skipped);
+  const skipped = results.filter(r => r.skipped);
+
+  document.getElementById('reportDate').textContent = `${sc.name} — ${new Date().toLocaleDateString()}`;
+
+  let avgOverall = 0, avgAcc = 0, avgInt = 0, avgFlu = 0;
+  if (evaluated.length) {
+    avgOverall = evaluated.reduce((s,r) => s + r.scores.overall, 0) / evaluated.length;
+    avgAcc = evaluated.reduce((s,r) => s + r.scores.accuracy, 0) / evaluated.length;
+    avgInt = evaluated.reduce((s,r) => s + r.scores.intelligibility, 0) / evaluated.length;
+    avgFlu = evaluated.reduce((s,r) => s + r.scores.fluency, 0) / evaluated.length;
+  }
+
+  const areas = [{name:'Repeat Accuracy',score:avgAcc},{name:'Pronunciation',score:avgInt},{name:'Fluency',score:avgFlu}];
+  areas.sort((a,b)=>a.score-b.score);
+
+  // Score ring SVG
+  const oc = sc2(avgOverall);
+  const r2 = 52, circ = 2*Math.PI*r2, off = circ*(1-avgOverall/5);
+
+  let html = `
+    <div class="report-summary">
+      <div style="font-size:36px;margin-bottom:8px">${sc.emoji}</div>
+      <h3>${sc.name}</h3>
+      <p style="font-size:13px;color:var(--text-sec);margin-bottom:16px">${evaluated.length} of 7 sentences evaluated${skipped.length ? ` (${skipped.length} skipped)` : ''}</p>
+      <div class="overall-ring">
+        <div class="score-ring" style="width:120px;height:120px">
+          <svg width="120" height="120">
+            <circle cx="60" cy="60" r="${r2}" fill="none" stroke="#e0e0e0" stroke-width="8"/>
+            <circle cx="60" cy="60" r="${r2}" fill="none" stroke="${oc}" stroke-width="8" stroke-dasharray="${circ}" stroke-dashoffset="${off}" stroke-linecap="round"/>
+          </svg>
+          <div class="val" style="color:${oc}">${Math.round(avgOverall*10)/10}</div>
+        </div>
+        <div class="score-max">Overall Score (out of 5)</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+      <div class="eval-card" style="text-align:center">
+        <h4>Accuracy</h4>
+        <div class="bar-bg"><div class="bar-fill" style="width:${(avgAcc/5)*100}%;background:${sc2(avgAcc)}"></div></div>
+        <div style="font-size:22px;font-weight:700;color:${sc2(avgAcc)}">${Math.round(avgAcc*10)/10}/5</div>
+        <div style="font-size:11px;color:var(--text-sec)">${sl(avgAcc)}</div>
+      </div>
+      <div class="eval-card" style="text-align:center">
+        <h4>Pronunciation</h4>
+        <div class="bar-bg"><div class="bar-fill" style="width:${(avgInt/5)*100}%;background:${sc2(avgInt)}"></div></div>
+        <div style="font-size:22px;font-weight:700;color:${sc2(avgInt)}">${Math.round(avgInt*10)/10}/5</div>
+        <div style="font-size:11px;color:var(--text-sec)">${sl(avgInt)}</div>
+      </div>
+      <div class="eval-card" style="text-align:center">
+        <h4>Fluency</h4>
+        <div class="bar-bg"><div class="bar-fill" style="width:${(avgFlu/5)*100}%;background:${sc2(avgFlu)}"></div></div>
+        <div style="font-size:22px;font-weight:700;color:${sc2(avgFlu)}">${Math.round(avgFlu*10)/10}/5</div>
+        <div style="font-size:11px;color:var(--text-sec)">${sl(avgFlu)}</div>
+      </div>
+    </div>`;
+
+  if (evaluated.length) {
+    html += `<div class="tip-box" style="margin-bottom:20px">
+      <strong>Focus Area:</strong> Your weakest dimension is <strong>${areas[0].name}</strong> (${Math.round(areas[0].score*10)/10}/5).
+      Strongest: <strong>${areas[2].name}</strong> (${Math.round(areas[2].score*10)/10}/5).
+    </div>`;
+  }
+
+  // Sentence-by-sentence breakdown
+  html += '<h3 style="margin-bottom:12px;font-size:15px">Sentence-by-Sentence Breakdown</h3>';
+  results.forEach((r, i) => {
+    if (r.skipped) {
+      html += `<div class="session-item">
+        <h4>Sentence ${r.sentenceIdx} <span class="sentence-difficulty" style="background:var(--border);color:var(--text-sec)">${r.difficulty}</span> — <span style="color:var(--text-sec)">Skipped</span></h4>
+        <div style="font-size:13px;color:var(--text-sec);margin-top:4px">"${r.original}"</div>
+      </div>`;
+    } else {
+      const s = r.scores;
+      const origWords = getWords(r.original);
+      const spokenWords = getWords(r.transcript);
+      const origSet = new Set(origWords);
+
+      // Build word diff
+      let diffHtml = '<div style="margin-top:8px;font-size:12px;line-height:2">';
+      diffHtml += '<div><span style="color:var(--text-sec)">Expected:</span> ' + origWords.map(w => `<span style="background:#e8f0fe;padding:1px 5px;border-radius:3px;margin:1px">${w}</span>`).join(' ') + '</div>';
+      diffHtml += '<div style="margin-top:4px"><span style="color:var(--text-sec)">You said:</span> ';
+      if (spokenWords.length === 0) {
+        diffHtml += '<em style="color:var(--danger)">No speech detected</em>';
+      } else {
+        diffHtml += spokenWords.map(w => {
+          const color = origSet.has(w) ? '#e8ffe8' : '#ffe8e8';
+          return `<span style="background:${color};padding:1px 5px;border-radius:3px;margin:1px">${w}</span>`;
+        }).join(' ');
+      }
+      diffHtml += '</div></div>';
+
+      html += `<div class="session-item">
+        <h4>Sentence ${r.sentenceIdx} <span class="sentence-difficulty" style="background:${r.difficulty==='short'?'var(--success)':r.difficulty==='medium'?'var(--primary)':'var(--orange)'}">${r.difficulty}</span></h4>
+        <div class="mini-scores">
+          <span style="background:${sc2(s.overall)}">Overall: ${s.overall}/5</span>
+          <span style="background:${sc2(s.accuracy)}">Accuracy: ${s.accuracy}/5</span>
+          <span style="background:${sc2(s.intelligibility)}">Pronunciation: ${s.intelligibility}/5</span>
+          <span style="background:${sc2(s.fluency)}">Fluency: ${s.fluency}/5</span>
+        </div>
+        ${diffHtml}
+      </div>`;
+    }
+  });
+
+  // Improvement tips
+  html += `<div class="card" style="margin-top:20px;background:linear-gradient(135deg,#e8f0fe,#e8ffe8)">
+    <h3 style="margin-bottom:10px">Improvement Tips</h3>
+    <ol style="padding-left:20px;font-size:14px;line-height:2">
+      ${avgAcc < 4 ? '<li><strong>Accuracy:</strong> Focus on catching every word. Don\'t paraphrase — repeat exactly. Practice with shorter sentences first.</li>' : '<li><strong>Accuracy:</strong> Great job! Your repetitions were very close to the originals.</li>'}
+      ${avgInt < 4 ? '<li><strong>Pronunciation:</strong> Practice words you missed. Use a dictionary app to hear correct pronunciation. Record and compare.</li>' : '<li><strong>Pronunciation:</strong> Your speech was clear and intelligible. Keep it up!</li>'}
+      ${avgFlu < 4 ? '<li><strong>Fluency:</strong> Start speaking immediately after the beep. Maintain a steady rhythm — don\'t restart mid-sentence.</li>' : '<li><strong>Fluency:</strong> Excellent rhythm and pacing. Very natural delivery.</li>'}
+      <li><strong>Memory tip:</strong> Visualize the scene as you listen — it helps you remember longer sentences.</li>
+    </ol>
+  </div>
+
+  <div style="text-align:center;margin-top:20px">
+    <button class="btn btn-primary" onclick="goHome()" style="min-width:200px">Try Another Scenario</button>
+  </div>`;
+
+  document.getElementById('reportContent').innerHTML = html;
+}
+
+// Alias for the renamed color function (used in report)
+function sc2(score) { return sc(score); }
+
+// ===== GLOBAL SESSION REPORT (from home screen) =====
+function showReport() {
+  if (!sessionResults.length) return;
+  showScreen('screenReport');
+  document.getElementById('reportDate').textContent = 'Full Session — ' + new Date().toLocaleDateString() + ' — ' + sessionResults.length + ' sentence(s)';
+
+  const evaluated = sessionResults.filter(r => r.scores && !r.skipped);
+  const skipped = sessionResults.filter(r => r.skipped);
+
+  let avgOverall = 0, avgAcc = 0, avgInt = 0, avgFlu = 0;
+  if (evaluated.length) {
+    avgOverall = evaluated.reduce((s,r) => s + r.scores.overall, 0) / evaluated.length;
+    avgAcc = evaluated.reduce((s,r) => s + r.scores.accuracy, 0) / evaluated.length;
+    avgInt = evaluated.reduce((s,r) => s + r.scores.intelligibility, 0) / evaluated.length;
+    avgFlu = evaluated.reduce((s,r) => s + r.scores.fluency, 0) / evaluated.length;
+  }
+
+  const areas = [{name:'Repeat Accuracy',score:avgAcc},{name:'Pronunciation',score:avgInt},{name:'Fluency',score:avgFlu}];
+  areas.sort((a,b)=>a.score-b.score);
+
+  let html = `<div class="report-summary">
+    <h3>Full Session Summary</h3>
+    <div style="font-size:48px;font-weight:700;color:${sc(avgOverall)}">${Math.round(avgOverall*10)/10}<span style="font-size:20px;color:var(--text-sec)">/5</span></div>
+    <p style="font-size:14px;margin-top:8px">${evaluated.length} evaluated | ${skipped.length} skipped</p>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px">
+    <div class="eval-card" style="text-align:center"><h4>Accuracy</h4><div style="font-size:22px;font-weight:700;color:${sc(avgAcc)}">${Math.round(avgAcc*10)/10}/5</div></div>
+    <div class="eval-card" style="text-align:center"><h4>Pronunciation</h4><div style="font-size:22px;font-weight:700;color:${sc(avgInt)}">${Math.round(avgInt*10)/10}/5</div></div>
+    <div class="eval-card" style="text-align:center"><h4>Fluency</h4><div style="font-size:22px;font-weight:700;color:${sc(avgFlu)}">${Math.round(avgFlu*10)/10}/5</div></div>
+  </div>`;
+
+  if (evaluated.length) {
+    html += `<div class="tip-box" style="margin-bottom:20px">
+      <strong>Focus Area:</strong> Your weakest dimension is <strong>${areas[0].name}</strong> (${Math.round(areas[0].score*10)/10}/5).
+      Strongest: <strong>${areas[2].name}</strong> (${Math.round(areas[2].score*10)/10}/5).
+    </div>`;
+  }
+
+  html += '<h3 style="margin-bottom:12px;font-size:15px">All Sentences</h3>';
+  sessionResults.forEach((r) => {
+    if (r.skipped) {
+      html += `<div class="session-item"><h4>#${r.sentenceIdx} (${r.scenario}) — <span style="color:var(--text-sec)">Skipped</span></h4><div style="font-size:13px;color:var(--text-sec)">"${r.original}"</div></div>`;
+    } else {
+      const s = r.scores;
+      html += `<div class="session-item">
+        <h4>#${r.sentenceIdx} (${r.scenario}) <span class="sentence-difficulty" style="background:${r.difficulty==='short'?'var(--success)':r.difficulty==='medium'?'var(--primary)':'var(--orange)'}">${r.difficulty}</span></h4>
+        <div class="mini-scores">
+          <span style="background:${sc(s.overall)}">Overall: ${s.overall}/5</span>
+          <span style="background:${sc(s.accuracy)}">Accuracy: ${s.accuracy}/5</span>
+          <span style="background:${sc(s.intelligibility)}">Pronunciation: ${s.intelligibility}/5</span>
+          <span style="background:${sc(s.fluency)}">Fluency: ${s.fluency}/5</span>
+        </div>
+        <div style="font-size:12px;color:var(--text-sec);margin-top:4px"><strong>Expected:</strong> "${r.original}"</div>
+        <div style="font-size:12px;color:var(--text-sec)"><strong>You said:</strong> "${r.transcript || '(no speech)'}"</div>
+      </div>`;
+    }
+  });
+
+  document.getElementById('reportContent').innerHTML = html;
+}
+</script>
+</body>
+</html>

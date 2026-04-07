@@ -1,20 +1,35 @@
-# TOEFL iBT — Build a Sentence Practice
+# TOEFL iBT 2026 — Practice Hub
 
-An interactive, browser-based practice tool for the **Build a Sentence** (Complete a Sentence) task from the TOEFL iBT Writing section. Drag and drop jumbled words to form grammatically correct conversational responses — all under a timed countdown.
+An interactive, browser-based practice tool for the new **TOEFL iBT 2026** format (effective January 21, 2026). Two practice sections covering Speaking and Writing, all running locally in your browser with no sign-up required.
 
 **Live App:** [https://hkcc375.github.io/TOEFL-iBT-Practice/](https://hkcc375.github.io/TOEFL-iBT-Practice/)
 
-## Features
+## Practice Sections
 
-- **411 conversational questions** — all capped at 14 words, covering everyday campus and daily-life topics
-- **6-minute countdown timer** — practice under timed pressure; the test auto-stops when time runs out
-- **Drag-and-drop or click** — drag words into the answer zone and reorder them, or simply click to move words between the word bank and answer bar
-- **Auto-advance on correct answers** — no need to click "Next" when you get it right
-- **Cross-session deduplication** — tracks which questions you've already seen (via localStorage) and always serves fresh ones first; resets automatically once the entire pool is exhausted
-- **Detailed practice report** — shown when time expires, including:
-  - Total questions attempted and accuracy percentage
-  - Average time per question
-  - Per-question breakdown with your answer, the correct answer, and time spent
+### Listen & Repeat (Speaking)
+
+Mirrors the new TOEFL iBT 2026 **Listen & Repeat** task. You hear a sentence and must repeat it exactly — scored on accuracy, pronunciation, and fluency.
+
+- **36 campus/daily-life scenarios** with 7 sentences each (252 total)
+- **Progressive difficulty:** 2 short (8s), 3 medium (10s), 2 long (12s) — matching the real exam
+- **No preparation time** — recording starts automatically 1 second after the prompt, just like the real test
+- **Live speech transcription** via Web Speech API
+- **AI-powered evaluation** on a 0–5 scale across 3 rubric dimensions:
+  - Repeat Accuracy (word-level edit distance)
+  - Pronunciation / Intelligibility (character-level similarity)
+  - Fluency & Rhythm (length ratio + word order preservation)
+- **End-of-scenario report** with overall scores, sentence-by-sentence word diffs, and improvement tips
+
+### Build a Sentence (Writing)
+
+Practice the **Build a Sentence** (Complete a Sentence) task from the TOEFL iBT Writing section.
+
+- **411 conversational questions** — all capped at 14 words, covering campus and daily-life topics
+- **6-minute countdown timer** — practice under timed pressure; auto-stops when time runs out
+- **Drag-and-drop or click** — drag words into the answer zone or click to move them
+- **Auto-advance on correct answers**
+- **Cross-session deduplication** — tracks questions via localStorage; resets when the pool is exhausted
+- **Detailed practice report** — accuracy, average time per question, per-question breakdown
 
 ## How to Use
 
@@ -22,7 +37,6 @@ An interactive, browser-based practice tool for the **Build a Sentence** (Comple
 Visit [https://hkcc375.github.io/TOEFL-iBT-Practice/](https://hkcc375.github.io/TOEFL-iBT-Practice/) — works on any device with a modern browser.
 
 ### Option 2: Open Locally
-Download `index.html` and open it directly in your browser:
 ```bash
 open index.html
 ```
@@ -34,23 +48,21 @@ python3 -m http.server 8080
 # then visit http://localhost:8080
 ```
 
-## How It Works
+## File Structure
 
-1. A **Person 1** prompt is displayed (a conversational question).
-2. **Person 2's response** is shown as jumbled words in the **Word Bank**.
-3. Drag (or click) the words into the **Your Answer** zone in the correct order.
-4. Click **Submit** to check your answer.
-   - Correct answers auto-advance after a brief flash.
-   - Wrong answers show the correct sentence; click **Next** to continue.
-5. When the 6-minute timer hits zero, the session ends and a **Practice Report** is generated.
+```
+index.html              — Landing page / section selector
+listen-and-repeat.html  — Listen & Repeat speaking practice
+build-a-sentence.html   — Build a Sentence writing practice
+```
 
 ## Tech Stack
 
-- **Single HTML file** — zero dependencies, no build step, no framework
-- **Vanilla JavaScript** — drag-and-drop API with click fallback
+- **Single HTML files** — zero dependencies, no build step, no framework
+- **Vanilla JavaScript** — Web Speech API, MediaRecorder, drag-and-drop
 - **localStorage** — for cross-session question deduplication
-- **CSS animations** — timer pulses red in the final 30 seconds
+- **Works best in Chrome/Edge** — for full speech recognition support
 
 ## License
 
-This project is for personal TOEFL practice. Feel free to fork and add your own questions.
+This project is for personal TOEFL practice. Feel free to fork and add your own sections.

@@ -150,6 +150,9 @@
 
   <!-- TASK -->
   <div class="screen" id="screenTask">
+    <div id="speechWarningBanner" style="display:none;background:#fef3c7;border:1px solid #f59e0b;border-radius:8px;padding:12px 16px;margin-bottom:12px;font-size:13px;color:#92400e;line-height:1.5">
+      <strong>⚠ Speech Recognition Issue:</strong> <span id="speechWarningText"></span>
+    </div>
     <div class="sentence-label" id="sentenceLabel"></div>
     <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
 
@@ -810,13 +813,27 @@ function initVisualizer() {
   for (let i = 0; i < 40; i++) { const b = document.createElement('div'); b.className = 'bar'; w.appendChild(b); }
 }
 
+let recognitionActive = false;   // track whether recognition is running
+let recognitionError = '';       // last error for diagnostics
+
 function initSpeechRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) return;
+  if (!SR) {
+    console.warn('[Listen&Repeat] SpeechRecognition API not available in this browser.');
+    return;
+  }
   recognition = new SR();
   recognition.continuous = true;
   recognition.interimResults = true;
   recognition.lang = 'en-US';
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    recognitionActive = true;
+    recognitionError = '';
+    console.log('[Listen&Repeat] Speech recognition started.');
+  };
+
   recognition.onresult = e => {
     interimTranscript = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -825,17 +842,72 @@ function initSpeechRecognition() {
     }
     updateLiveTranscript();
   };
-  recognition.onerror = () => {};
-  recognition.onend = () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') try { recognition.start(); } catch(e) {}
+
+  recognition.onerror = e => {
+    recognitionError = e.error || 'unknown';
+    console.warn('[Listen&Repeat] Speech recognition error:', e.error, e.message);
+    // Show user-facing warning for actionable errors
+    if (e.error === 'not-allowed') {
+      showRecognitionWarning('Microphone permission denied for speech recognition. Please allow microphone access in your browser settings and reload.');
+    } else if (e.error === 'network') {
+      showRecognitionWarning('Speech recognition requires an internet connection (Chrome sends audio to Google servers). Please check your connection.');
+    } else if (e.error === 'service-not-allowed') {
+      showRecognitionWarning('Speech recognition service is not allowed. Try using Chrome or Edge browser.');
+    } else if (e.error === 'no-speech') {
+      // This is normal — just means silence detected; recognition will restart via onend
+    } else if (e.error === 'audio-capture') {
+      showRecognitionWarning('No microphone was found, or the microphone is not working. Please check your audio input device.');
+    }
   };
+
+  recognition.onend = () => {
+    recognitionActive = false;
+    console.log('[Listen&Repeat] Speech recognition ended. Error was:', recognitionError || 'none');
+    // Auto-restart if still recording (recognition can time out)
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      // Small delay to avoid rapid restart loops on persistent errors
+      const delay = (recognitionError && recognitionError !== 'no-speech') ? 500 : 100;
+      setTimeout(() => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+          try {
+            recognition.start();
+          } catch(ex) {
+            console.warn('[Listen&Repeat] Could not restart recognition:', ex.message);
+          }
+        }
+      }, delay);
+    }
+  };
+}
+
+function showRecognitionWarning(msg) {
+  // Show in live transcript area
+  const el = document.getElementById('transcriptLive');
+  if (el && el.style.display !== 'none') {
+    el.innerHTML = '<span style="color:#d93025;font-weight:500">⚠ ' + msg + '</span>';
+  }
+  // Also show persistent banner
+  const banner = document.getElementById('speechWarningBanner');
+  if (banner) {
+    document.getElementById('speechWarningText').textContent = msg;
+    banner.style.display = 'block';
+  }
 }
 
 function updateLiveTranscript() {
   const el = document.getElementById('transcriptLive');
   if (el.style.display === 'none') return;
-  if (!finalTranscript && !interimTranscript) el.innerHTML = '<span class="placeholder">Listening to your voice...</span>';
-  else el.innerHTML = finalTranscript + '<span class="interim">' + interimTranscript + '</span>';
+  if (!finalTranscript && !interimTranscript) {
+    if (recognitionError && recognitionError !== 'no-speech') {
+      el.innerHTML = '<span style="color:#d93025">⚠ Speech recognition error: ' + recognitionError + '</span>';
+    } else if (!recognitionActive && recognition) {
+      el.innerHTML = '<span class="placeholder">Starting speech recognition...</span>';
+    } else {
+      el.innerHTML = '<span class="placeholder">Listening to your voice...</span>';
+    }
+  } else {
+    el.innerHTML = finalTranscript + '<span class="interim">' + interimTranscript + '</span>';
+  }
 }
 
 // ===== NAVIGATION =====
@@ -848,10 +920,45 @@ function goHome() {
   if (sessionResults.length) document.getElementById('reportBtnWrap').style.display = 'block';
 }
 
-function startScenario(idx) {
+async function startScenario(idx) {
   currentScenario = idx;
   currentSentenceIdx = 0;
   scenarioResults = [];
+
+  // Hide any previous warning banner
+  document.getElementById('speechWarningBanner').style.display = 'none';
+
+  // Pre-check: request mic permission early so we catch issues before the first sentence
+  try {
+    const testStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    testStream.getTracks().forEach(t => t.stop());
+  } catch(e) {
+    alert('Microphone access is required for Listen & Repeat.\n\nPlease allow microphone access and try again.\n\nError: ' + e.message);
+    return;
+  }
+
+  // Check if SpeechRecognition is available
+  if (!recognition) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) {
+      alert('Your browser does not support Speech Recognition.\n\nPlease use Google Chrome or Microsoft Edge for the best experience.');
+      return;
+    }
+    initSpeechRecognition();
+  }
+
+  // Quick speech recognition availability test
+  if (recognition) {
+    try {
+      recognition.start();
+      await new Promise(r => setTimeout(r, 300));
+      recognition.abort();
+      await new Promise(r => setTimeout(r, 200));
+    } catch(e) {
+      console.warn('[Listen&Repeat] Pre-check recognition test error:', e.message);
+    }
+  }
+
   loadSentence();
   showScreen('screenTask');
 }
@@ -974,7 +1081,25 @@ async function startRecording() {
     };
 
     mediaRecorder.start();
-    if (recognition) try { recognition.start(); } catch(e) {}
+    // Start speech recognition with retry logic
+    if (recognition) {
+      // Abort any previous session first
+      try { recognition.abort(); } catch(ex) {}
+      // Small delay to ensure clean state, then start
+      setTimeout(() => {
+        if (recognition) {
+          try {
+            recognition.start();
+            console.log('[Listen&Repeat] Recognition.start() called successfully.');
+          } catch(ex) {
+            console.warn('[Listen&Repeat] Failed to start recognition:', ex.message);
+            showRecognitionWarning('Speech recognition failed to start: ' + ex.message + '. Your recording will still be saved, but transcription may not work.');
+          }
+        }
+      }, 200);
+    } else {
+      showRecognitionWarning('Speech recognition is not available in this browser. Try Chrome or Edge. Your recording will still be saved.');
+    }
 
     document.getElementById('transcriptLive').style.display = 'block';
     updateLiveTranscript();

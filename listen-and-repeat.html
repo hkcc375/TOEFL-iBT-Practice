@@ -947,13 +947,43 @@ async function startScenario(idx) {
     initSpeechRecognition();
   }
 
-  // Quick speech recognition availability test
+  // Warm up speech recognition — wait for onstart to confirm Google's servers are connected.
+  // This prevents the "cold start" problem where Sentence 1 gets no transcription.
   if (recognition) {
     try {
-      recognition.start();
+      console.log('[Listen&Repeat] Warming up speech recognition...');
+      await new Promise((resolve, reject) => {
+        const origOnStart = recognition.onstart;
+        const origOnError = recognition.onerror;
+        const timeout = setTimeout(() => {
+          console.warn('[Listen&Repeat] Warm-up timed out after 3s');
+          recognition.onstart = origOnStart;
+          recognition.onerror = origOnError;
+          try { recognition.abort(); } catch(ex) {}
+          resolve();
+        }, 3000);
+
+        recognition.onstart = () => {
+          console.log('[Listen&Repeat] Warm-up: recognition started (connection established).');
+          clearTimeout(timeout);
+          recognition.onstart = origOnStart;
+          recognition.onerror = origOnError;
+          try { recognition.abort(); } catch(ex) {}
+          resolve();
+        };
+        recognition.onerror = (e) => {
+          console.warn('[Listen&Repeat] Warm-up error:', e.error);
+          clearTimeout(timeout);
+          recognition.onstart = origOnStart;
+          recognition.onerror = origOnError;
+          try { recognition.abort(); } catch(ex) {}
+          resolve(); // still proceed — real errors will surface during recording
+        };
+        recognition.start();
+      });
+      // Give browser a moment to fully release the recognition session
       await new Promise(r => setTimeout(r, 300));
-      recognition.abort();
-      await new Promise(r => setTimeout(r, 200));
+      console.log('[Listen&Repeat] Warm-up complete.');
     } catch(e) {
       console.warn('[Listen&Repeat] Pre-check recognition test error:', e.message);
     }
@@ -1042,6 +1072,26 @@ function playPrompt() {
   function anim() { if (!speaking) return; document.querySelectorAll('#visualizer .bar').forEach(b => { b.style.height = (Math.random()*40+6)+'px'; }); animFrame = requestAnimationFrame(anim); }
   anim();
 
+  // Pre-warm recognition during TTS playback so it's ready when recording starts.
+  // We start it, let it connect, then abort — the connection stays warm.
+  utt.onstart = () => {
+    if (recognition && !recognitionActive) {
+      try {
+        recognition.start();
+        console.log('[Listen&Repeat] Pre-warming recognition during TTS playback...');
+        // Abort after 1.5s — just long enough to establish connection
+        setTimeout(() => {
+          if (recognitionActive) {
+            try { recognition.abort(); } catch(ex) {}
+            console.log('[Listen&Repeat] Pre-warm aborted, connection is warm.');
+          }
+        }, 1500);
+      } catch(ex) {
+        console.log('[Listen&Repeat] Pre-warm start failed (may already be running):', ex.message);
+      }
+    }
+  };
+
   utt.onend = () => {
     speaking = false;
     cancelAnimationFrame(animFrame);
@@ -1081,22 +1131,26 @@ async function startRecording() {
     };
 
     mediaRecorder.start();
-    // Start speech recognition with retry logic
+    // Start speech recognition
     if (recognition) {
-      // Abort any previous session first
+      // Abort any previous session first, then start with a short settle delay
       try { recognition.abort(); } catch(ex) {}
-      // Small delay to ensure clean state, then start
-      setTimeout(() => {
-        if (recognition) {
-          try {
-            recognition.start();
-            console.log('[Listen&Repeat] Recognition.start() called successfully.');
-          } catch(ex) {
-            console.warn('[Listen&Repeat] Failed to start recognition:', ex.message);
-            showRecognitionWarning('Speech recognition failed to start: ' + ex.message + '. Your recording will still be saved, but transcription may not work.');
+      const startRecog = (delay) => {
+        setTimeout(() => {
+          if (recognition) {
+            try {
+              recognition.start();
+              console.log('[Listen&Repeat] Recognition.start() called successfully.');
+            } catch(ex) {
+              console.warn('[Listen&Repeat] Failed to start recognition:', ex.message);
+              // If it failed because it's already running, that's fine
+              if (ex.message && ex.message.includes('already started')) return;
+              showRecognitionWarning('Speech recognition failed to start: ' + ex.message + '. Your recording will still be saved, but transcription may not work.');
+            }
           }
-        }
-      }, 200);
+        }, delay);
+      };
+      startRecog(100);
     } else {
       showRecognitionWarning('Speech recognition is not available in this browser. Try Chrome or Edge. Your recording will still be saved.');
     }

@@ -897,7 +897,12 @@ function showReport() {
 
 function confirmExit() {
   if (confirm('Are you sure you want to exit? Your current progress will not be saved.')) {
+    // Clean up timer, disable controls, and navigate away
     clearInterval(timerInterval);
+    timeUp = true;
+    submitBtn.disabled = true;
+    resetBtn.disabled = true;
+    draggedEl = null;
     window.location.href = 'index.html';
   }
 }

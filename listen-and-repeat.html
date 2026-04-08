@@ -868,7 +868,7 @@ function initSpeechRecognition() {
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       // Small delay to avoid rapid restart loops on persistent errors
       const delay = (recognitionError && recognitionError !== 'no-speech') ? 500 : 100;
-      setTimeout(() => {
+      safeTimeout(() => {
         if (mediaRecorder && mediaRecorder.state === 'recording') {
           try {
             recognition.start();
@@ -1086,7 +1086,7 @@ function playPrompt() {
         recognition.start();
         console.log('[Listen&Repeat] Pre-warming recognition during TTS playback...');
         // Abort after 1.5s — just long enough to establish connection
-        setTimeout(() => {
+        safeTimeout(() => {
           if (recognitionActive) {
             try { recognition.abort(); } catch(ex) {}
             console.log('[Listen&Repeat] Pre-warm aborted, connection is warm.');
@@ -1106,7 +1106,7 @@ function playPrompt() {
     setStatus('done', 'Get ready to repeat...');
     document.getElementById('timer').textContent = '...';
     document.getElementById('timerLabel').textContent = 'Recording starts in 1 second';
-    setTimeout(() => startRecording(), 1000);
+    safeTimeout(() => startRecording(), 1000);
   };
 
   speechSynthesis.cancel();
@@ -1127,6 +1127,7 @@ async function startRecording() {
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
     mediaRecorder.onstop = () => {
+      if (quitting) return; // exit was clicked — skip evaluation
       recordingBlob = new Blob(audioChunks, { type: 'audio/webm' });
       stream.getTracks().forEach(t => t.stop());
       cancelAnimationFrame(animFrame);
@@ -1142,7 +1143,7 @@ async function startRecording() {
       // Abort any previous session first, then start with a short settle delay
       try { recognition.abort(); } catch(ex) {}
       const startRecog = (delay) => {
-        setTimeout(() => {
+        safeTimeout(() => {
           if (recognition) {
             try {
               recognition.start();
@@ -1221,12 +1222,73 @@ function startTimer(seconds, label, onDone) {
 // ===== HELPERS =====
 function setStatus(s, t) { document.getElementById('statusDot').className='status-dot '+s; document.getElementById('statusText').textContent=t; }
 function resetBars() { document.querySelectorAll('#visualizer .bar').forEach(b=>{b.style.height='6px';b.style.background='var(--primary)'}); }
+// Track all pending timeouts so we can cancel them on exit
+let pendingTimeouts = [];
+function safeTimeout(fn, delay) {
+  const id = setTimeout(() => {
+    pendingTimeouts = pendingTimeouts.filter(t => t !== id);
+    fn();
+  }, delay);
+  pendingTimeouts.push(id);
+  return id;
+}
+
+let quitting = false; // guard to prevent onstop handlers from running after exit
+
 function stopEverything() {
-  speechSynthesis.cancel(); clearInterval(timerInterval); cancelAnimationFrame(animFrame);
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-  if (recognition) try { recognition.stop(); } catch(e) {}
-  if (audioContext) { audioContext.close().catch(()=>{}); audioContext = null; }
+  quitting = true;
+
+  // 1. Cancel all pending timeouts (pre-warm, startRecording delay, auto-advance, etc.)
+  pendingTimeouts.forEach(id => clearTimeout(id));
+  pendingTimeouts = [];
+
+  // 2. Stop TTS and timers
+  speechSynthesis.cancel();
+  clearInterval(timerInterval);
+  cancelAnimationFrame(animFrame);
+
+  // 3. Stop MediaRecorder — detach onstop first to prevent evaluateSentence() from firing
+  if (mediaRecorder) {
+    mediaRecorder.onstop = null;
+    mediaRecorder.ondataavailable = null;
+    if (mediaRecorder.state !== 'inactive') {
+      try { mediaRecorder.stop(); } catch(e) {}
+    }
+    // Release mic stream tracks (turns off browser mic indicator)
+    if (mediaRecorder.stream) {
+      mediaRecorder.stream.getTracks().forEach(t => t.stop());
+    }
+    mediaRecorder = null;
+  }
+
+  // 4. Abort speech recognition immediately (abort discards pending results, stop waits for them)
+  if (recognition) {
+    try { recognition.abort(); } catch(e) {}
+  }
+  recognitionActive = false;
+  recognitionError = '';
+
+  // 5. Close AudioContext (mic visualizer)
+  if (audioContext) {
+    audioContext.close().catch(() => {});
+    audioContext = null;
+    analyser = null;
+  }
+
+  // 6. Reset transcript state
+  finalTranscript = '';
+  interimTranscript = '';
+  audioChunks = [];
+  recordingBlob = null;
+
+  // 7. Reset UI elements
   resetBars();
+  document.getElementById('transcriptLive').style.display = 'none';
+  document.getElementById('afterRecord').style.display = 'none';
+  document.getElementById('speechWarningBanner').style.display = 'none';
+
+  // Allow handlers to run again after cleanup is complete
+  setTimeout(() => { quitting = false; }, 0);
 }
 
 // ================================================================
@@ -1270,7 +1332,7 @@ function evaluateSentence() {
   setStatus('done', isLast ? 'Scenario complete!' : 'Saved');
 
   // Auto-advance after brief pause
-  setTimeout(() => {
+  safeTimeout(() => {
     if (isLast) {
       showScenarioReport();
     } else {

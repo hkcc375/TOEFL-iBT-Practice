@@ -115,7 +115,8 @@
 <body>
 
 <header>
-  <h1>TOEFL iBT 2026 — Listen & Repeat</h1>
+  <a href="index.html" style="color:#fff;text-decoration:none;font-size:13px;opacity:.8;margin-right:12px" title="Back to Practice Hub">&larr; Home</a>
+  <h1 style="flex:1">TOEFL iBT 2026 — Listen & Repeat</h1>
   <span class="badge" id="taskCounter">--</span>
 </header>
 
@@ -188,7 +189,7 @@
     </div>
 
     <div class="footer-nav">
-      <button class="btn btn-outline" onclick="goHome()">Quit</button>
+      <button class="btn btn-outline" onclick="confirmQuit()" style="color:var(--danger);border-color:var(--danger)">Exit</button>
       <button class="btn btn-outline" id="btnSkip" onclick="skipSentence()">Skip</button>
     </div>
   </div>
@@ -918,6 +919,11 @@ function goHome() {
   showScreen('screenHome');
   document.getElementById('taskCounter').textContent = '--';
   if (sessionResults.length) document.getElementById('reportBtnWrap').style.display = 'block';
+}
+
+function confirmQuit() {
+  const choice = confirm('Exit this scenario?\n\nPress OK to go back to the scenario list.\n(Your progress for unfinished sentences will be lost.)');
+  if (choice) goHome();
 }
 
 async function startScenario(idx) {

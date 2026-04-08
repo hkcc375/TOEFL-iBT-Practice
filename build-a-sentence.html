@@ -160,7 +160,8 @@
 <body>
 
 <header>
-  <h1>TOEFL iBT — Build a Sentence</h1>
+  <a href="index.html" style="color:#fff;text-decoration:none;font-size:13px;opacity:.8;margin-right:12px" title="Back to Practice Hub">&larr; Home</a>
+  <h1 style="flex:1">TOEFL iBT — Build a Sentence</h1>
   <div id="timer">06:00</div>
 </header>
 
@@ -185,6 +186,7 @@
       <div class="buttons">
         <button class="btn-secondary" id="resetBtn">Reset</button>
         <button class="btn-primary" id="submitBtn">Submit</button>
+        <button class="btn-secondary" id="exitBtn" style="margin-left:auto;color:#dc2626;border:1px solid #dc2626" onclick="confirmExit()">Exit</button>
       </div>
 
       <div id="feedback"></div>
@@ -197,6 +199,7 @@
     <div id="reportDetails"></div>
     <div class="buttons">
       <button class="btn-primary" id="restartBtn">Practice Again</button>
+      <button class="btn-secondary" onclick="window.location.href='index.html'" style="margin-left:8px">Back to Home</button>
     </div>
   </div>
 
@@ -890,6 +893,13 @@ function showReport() {
       </div>
     </div>
   `).join('');
+}
+
+function confirmExit() {
+  if (confirm('Are you sure you want to exit? Your current progress will not be saved.')) {
+    clearInterval(timerInterval);
+    window.location.href = 'index.html';
+  }
 }
 
 document.getElementById('restartBtn').addEventListener('click', () => {

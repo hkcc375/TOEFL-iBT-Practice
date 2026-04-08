@@ -1,0 +1,1015 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TOEFL iBT 2026 – Complete the Words</title>
+<style>
+  :root {
+    --blue: #1e3a8a;
+    --blue-light: #2563eb;
+    --accent: #e8f0fe;
+    --gold: #f59e0b;
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --text: #1f2937;
+    --text-sec: #6b7280;
+    --border: #e5e7eb;
+    --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 30px rgba(0,0,0,0.12);
+    --header-bg: #1a2238;
+    --primary: #4058d6;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: Georgia, "Times New Roman", serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    position: sticky; top: 0;
+    background: var(--header-bg);
+    color: #fff;
+    padding: 14px 28px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.15);
+    z-index: 100;
+    font-family: Arial, sans-serif;
+  }
+  .header-left { display: flex; align-items: center; gap: 18px; }
+  .home-link {
+    color: #ffd166; text-decoration: none; font-size: 14px; font-weight: 600;
+    display: flex; align-items: center; gap: 4px;
+    padding: 4px 10px; border-radius: 6px;
+    transition: background .15s;
+  }
+  .home-link:hover { background: rgba(255,255,255,.1); }
+  header h1 { font-size: 18px; margin: 0; letter-spacing: .5px; }
+  .meta { display: flex; gap: 22px; font-family: Arial, sans-serif; font-size: 14px; align-items: center; }
+  .meta span b { color: #ffd166; }
+  #timer {
+    font-size: 22px; font-weight: bold; font-family: "Courier New", monospace;
+    color: #ffd166; min-width: 52px; text-align: center;
+  }
+  #timer.warning { color: #ffa500; }
+  #timer.danger { color: #ff4444; animation: pulse .6s ease-in-out infinite alternate; }
+  @keyframes pulse { from { opacity: 1; } to { opacity: .4; } }
+  .exit-btn {
+    background: #dc3545; color: #fff; border: none; padding: 6px 16px;
+    border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 600;
+    font-family: Arial, sans-serif;
+  }
+  .exit-btn:hover { background: #c82333; }
+
+  /* ── Home Screen ── */
+  #homeScreen { max-width: 1100px; margin: 0 auto; padding: 28px 20px 48px; }
+  .home-header {
+    text-align: center; margin-bottom: 28px; font-family: Arial, sans-serif;
+  }
+  .home-header h2 { font-size: 26px; color: var(--text); margin-bottom: 8px; font-family: Arial, sans-serif; }
+  .home-header p { color: var(--text-sec); font-size: 15px; font-family: Arial, sans-serif; }
+
+  .filter-bar {
+    display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+    font-family: Arial, sans-serif; align-items: center;
+  }
+  .filter-bar input {
+    flex: 1; min-width: 200px; padding: 10px 16px;
+    border: 2px solid var(--border); border-radius: 10px;
+    font-size: 14px; outline: none; font-family: Arial, sans-serif;
+  }
+  .filter-bar input:focus { border-color: var(--primary); }
+  .filter-btn {
+    padding: 9px 18px; border-radius: 10px; border: 2px solid var(--border);
+    background: #fff; color: var(--text); cursor: pointer; font-size: 13px;
+    font-weight: 600; transition: all .15s; font-family: Arial, sans-serif;
+  }
+  .filter-btn:hover, .filter-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+  .passage-count { font-family: Arial, sans-serif; font-size: 13px; color: var(--text-sec); margin-left: auto; }
+
+  .passage-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+  .passage-card {
+    background: var(--card); border-radius: 12px; box-shadow: var(--shadow);
+    padding: 20px; cursor: pointer; transition: all .2s;
+    border: 2px solid transparent; font-family: Arial, sans-serif;
+  }
+  .passage-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--primary); }
+  .passage-card .card-num { font-size: 11px; color: var(--text-sec); font-weight: 600; margin-bottom: 6px; }
+  .passage-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; line-height: 1.3; }
+  .passage-card .card-meta { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: bold; text-transform: uppercase;
+  }
+  .badge.easy { background: #d4edda; color: #155724; }
+  .badge.medium { background: #fff3cd; color: #856404; }
+  .badge.hard { background: #f8d7da; color: #721c24; }
+  .topic-tag {
+    font-size: 11px; color: var(--text-sec); background: var(--bg);
+    padding: 3px 8px; border-radius: 8px;
+  }
+
+  /* ── Practice Screen ── */
+  #practiceScreen { display: none; }
+  main.practice-main {
+    max-width: 820px; margin: 30px auto; background: #fff;
+    padding: 32px 40px; border-radius: 10px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.06);
+  }
+  .instructions {
+    background: #eef2ff; border-left: 4px solid var(--primary);
+    padding: 12px 16px; font-family: Arial, sans-serif; font-size: 14px;
+    margin-bottom: 22px; border-radius: 4px;
+  }
+  .difficulty-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 12px;
+    font-size: 12px; font-family: Arial, sans-serif; font-weight: bold; margin-left: 8px;
+  }
+  .easy   { background: #d4edda; color: #155724; }
+  .medium { background: #fff3cd; color: #856404; }
+  .hard   { background: #f8d7da; color: #721c24; }
+
+  .passage { font-size: 19px; line-height: 2.1; }
+  .passage input {
+    border: none; background: transparent;
+    font-family: "Courier New", monospace; font-size: 19px; font-weight: 600;
+    padding: 0 0 4px 0; margin: 0 2px; outline: none; text-align: left;
+    letter-spacing: 0;
+    background-image: linear-gradient(to right, #4058d6 0, #4058d6 0.78ch, transparent 0.78ch, transparent 1.1ch);
+    background-size: 1.1ch 2px; background-position: left bottom;
+    background-repeat: repeat-x; transition: background-color .15s;
+  }
+  .passage input:focus {
+    background-image: linear-gradient(to right, #ffa500 0, #ffa500 0.78ch, transparent 0.78ch, transparent 1.1ch);
+    background-size: 1.1ch 2px; background-repeat: repeat-x; background-position: left bottom;
+  }
+  .passage input.correct-input {
+    background-image: none; background-color: rgba(40,167,69,.12);
+    color: #28a745; border-radius: 3px;
+  }
+  .passage input.incorrect-input {
+    background-image: none; background-color: rgba(220,53,69,.1);
+    color: #dc3545; border-radius: 3px; text-decoration: line-through;
+  }
+  .passage .prefix { color: #1a2238; font-weight: 600; }
+  .passage .correction {
+    font-family: "Courier New", monospace; font-size: 15px; font-weight: 700;
+    color: #28a745; margin-left: 2px;
+  }
+
+  .controls {
+    margin-top: 28px; display: flex; justify-content: space-between;
+    align-items: center; font-family: Arial, sans-serif; gap: 12px; flex-wrap: wrap;
+  }
+  button {
+    background: var(--primary); color: #fff; border: none;
+    padding: 11px 26px; border-radius: 6px; font-size: 15px;
+    cursor: pointer; font-family: Arial, sans-serif; font-weight: bold;
+  }
+  button:hover { background: #2e44b0; }
+  button.secondary { background: #888; }
+  button.secondary:hover { background: #666; }
+  button.success { background: #28a745; }
+  button.success:hover { background: #1e7e34; }
+  .progress-bar {
+    height: 6px; background: #e3e6ef; border-radius: 3px;
+    overflow: hidden; margin-top: 8px;
+  }
+  .progress-fill { height: 100%; background: var(--primary); width: 0%; transition: width .3s; }
+  .muted { color: #777; font-size: 13px; font-family: Arial, sans-serif; }
+
+  /* ── Result inline ── */
+  .result-summary {
+    margin-top: 20px; padding: 16px; border-radius: 8px;
+    font-family: Arial, sans-serif; font-size: 15px; text-align: center;
+  }
+  .result-summary.good { background: #d4edda; color: #155724; }
+  .result-summary.ok { background: #fff3cd; color: #856404; }
+  .result-summary.bad { background: #f8d7da; color: #721c24; }
+
+  /* ── Session Report ── */
+  #reportScreen { display: none; }
+  .score-big {
+    font-size: 48px; color: var(--primary); font-weight: bold;
+    text-align: center; font-family: Arial, sans-serif;
+  }
+  .stat-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 14px; margin: 24px 0;
+  }
+  .stat-card {
+    background: var(--bg); padding: 16px; border-radius: 8px;
+    text-align: center; font-family: Arial, sans-serif;
+  }
+  .stat-card .label { font-size: 12px; color: #666; text-transform: uppercase; }
+  .stat-card .value { font-size: 22px; font-weight: bold; color: var(--text); margin-top: 4px; }
+  .review-item {
+    border-left: 4px solid #ccc; padding: 10px 14px; margin: 10px 0;
+    background: #fafbfd; font-family: Arial, sans-serif; font-size: 14px;
+  }
+  .review-item.correct { border-color: #28a745; }
+  .review-item.incorrect { border-color: #dc3545; }
+  .correct-word { color: #28a745; font-weight: bold; }
+  .incorrect-word { color: #dc3545; font-weight: bold; text-decoration: line-through; }
+
+  /* ── Overlay/Modal ── */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,.45); z-index: 200; align-items: center; justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #fff; border-radius: 14px; padding: 32px; max-width: 400px;
+    width: 90%; text-align: center; font-family: Arial, sans-serif;
+    box-shadow: 0 20px 60px rgba(0,0,0,.2);
+  }
+  .modal h3 { margin-bottom: 12px; font-size: 18px; }
+  .modal p { color: var(--text-sec); font-size: 14px; margin-bottom: 20px; }
+  .modal-btns { display: flex; gap: 12px; justify-content: center; }
+  .modal-btns button { font-size: 14px; padding: 9px 22px; }
+
+  @media (max-width: 640px) {
+    header { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+    main.practice-main { padding: 20px 16px; margin: 16px 10px; }
+    .passage { font-size: 16px; }
+    .passage input { font-size: 16px; }
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .passage-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header>
+  <div class="header-left">
+    <a href="index.html" class="home-link" id="homeLink">&#8592; Home</a>
+    <h1>TOEFL iBT &ndash; Complete the Words</h1>
+  </div>
+  <div class="meta" id="headerMeta" style="display:none;">
+    <span>Passage <b id="pnum">1</b></span>
+    <span>Score <b id="score">0</b></span>
+    <span id="timer">01:00</span>
+    <button class="exit-btn" onclick="confirmExit()">Exit</button>
+  </div>
+</header>
+
+<!-- ═══════════════ HOME SCREEN ═══════════════ -->
+<div id="homeScreen">
+  <div class="home-header">
+    <h2>Complete the Words</h2>
+    <p>Select a passage to begin. Fill in missing word endings within 60 seconds.</p>
+  </div>
+  <div class="filter-bar">
+    <input type="text" id="searchInput" placeholder="Search by title, topic, or keyword..." />
+    <button class="filter-btn active" data-level="all" onclick="setFilter('all',this)">All</button>
+    <button class="filter-btn" data-level="easy" onclick="setFilter('easy',this)">Easy</button>
+    <button class="filter-btn" data-level="medium" onclick="setFilter('medium',this)">Medium</button>
+    <button class="filter-btn" data-level="hard" onclick="setFilter('hard',this)">Hard</button>
+    <span class="passage-count" id="passageCount">100 passages</span>
+  </div>
+  <div class="passage-grid" id="passageGrid"></div>
+</div>
+
+<!-- ═══════════════ PRACTICE SCREEN ═══════════════ -->
+<div id="practiceScreen">
+  <main class="practice-main">
+    <div class="instructions">
+      <b>Directions:</b> Read the passage. Some words are missing their ending letters. Type the missing letters into each blank so that each word makes sense in context. Press <b>Tab</b> to move between blanks.
+      <span id="diffBadge" class="difficulty-badge easy">EASY</span>
+    </div>
+    <div class="passage" id="passage"></div>
+    <div class="progress-bar"><div class="progress-fill" id="pfill"></div></div>
+    <div class="controls" id="controls">
+      <span class="muted" id="hint"></span>
+      <div id="actionBtns">
+        <button id="submitBtn" onclick="submitPassage()">Submit</button>
+      </div>
+    </div>
+    <div id="resultArea"></div>
+  </main>
+</div>
+
+<!-- ═══════════════ REPORT SCREEN ═══════════════ -->
+<div id="reportScreen">
+  <main class="practice-main">
+    <h2 style="font-family:Arial;margin-top:0;text-align:center;">Session Report</h2>
+    <div class="score-big" id="finalScore">&mdash;</div>
+    <p style="text-align:center;font-family:Arial;color:#666;margin-top:-8px">Overall accuracy</p>
+    <div class="stat-grid">
+      <div class="stat-card"><div class="label">Total Time</div><div class="value" id="rTime">&ndash;</div></div>
+      <div class="stat-card"><div class="label">Passages</div><div class="value" id="rPass">&ndash;</div></div>
+      <div class="stat-card"><div class="label">Blanks Correct</div><div class="value" id="rCorrect">&ndash;</div></div>
+      <div class="stat-card"><div class="label">Avg / Passage</div><div class="value" id="rAvg">&ndash;</div></div>
+    </div>
+    <h3 style="font-family:Arial">Detailed Review</h3>
+    <div id="reviewList"></div>
+    <div style="text-align:center;margin-top:24px;display:flex;gap:12px;justify-content:center;">
+      <button class="secondary" onclick="goHome()">Back to Menu</button>
+      <button onclick="location.reload()">New Session</button>
+    </div>
+  </main>
+</div>
+
+<!-- ═══════════════ EXIT MODAL ═══════════════ -->
+<div class="modal-overlay" id="exitModal">
+  <div class="modal">
+    <h3>Exit Passage?</h3>
+    <p>Your progress on this passage will be lost. Are you sure you want to exit?</p>
+    <div class="modal-btns">
+      <button class="secondary" onclick="closeModal()">Cancel</button>
+      <button style="background:#dc3545" onclick="doExit()">Exit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   100 PASSAGES
+   Format: {full_word|prefix_length}
+   First sentence of each paragraph has NO blanks.
+   ============================================================ */
+const PASSAGES = [
+  // ===== EASY (1–30) =====
+  { id:1, level:"easy", title:"Honey Bees and Pollination", topic:"Biology",
+    text:`Honey bees play a crucial role in global agriculture. As they move from flower to flower, {pollen|3} sticks to their bodies and is {transferred|4} to other plants. This natural {process|3} allows flowers to {produce|3} seeds and fruits. Without bees, many {crops|2} would fail, and the food {supply|3} would shrink. Scientists are deeply {concerned|3} about the rapid {decline|3} in bee populations and are working to {protect|3} these {essential|4} creatures.` },
+
+  { id:2, level:"easy", title:"The Water Cycle", topic:"Geology",
+    text:`The water cycle describes how water moves continuously across the planet. Heat from the sun causes water to {evaporate|3} from oceans and lakes, rising as {vapor|3} into the air. At high {altitudes|3}, the vapor {condenses|3} into tiny droplets that form {clouds|3}. Eventually these droplets fall as {precipitation|5}, a process that {replenishes|4} rivers and underground {reservoirs|4}. This cycle has operated for {billions|3} of {years|2}.` },
+
+  { id:3, level:"easy", title:"Volcanoes and the Earth", topic:"Geology",
+    text:`A volcano is an opening in the Earth's crust through which hot molten rock can escape. Below the surface, this material is called {magma|2}, but once it reaches the air it becomes known as {lava|2}. Volcanic {eruptions|4} can be violent or gentle {depending|3} on the pressure inside. Ash and gas may {affect|3} weather patterns, lower {temperatures|4}, and even {damage|3} crops hundreds of miles {away|2}. Scientists carefully {monitor|3} active {volcanoes|4} for warning signs.` },
+
+  { id:4, level:"easy", title:"Sleep and Memory", topic:"Psychology",
+    text:`Sleep is essential for the proper functioning of the human brain. During deep sleep, the brain {organizes|4} information from the day and transfers it into long-term {memory|3}. People who are sleep-{deprived|3} tend to struggle with {concentration|5} and decision-making. Studies show that even a single night of poor sleep can {reduce|3} mental {performance|4} significantly. Adults typically {require|3} seven to nine {hours|3} of rest each {night|3} for optimal {health|3}.` },
+
+  { id:5, level:"easy", title:"Gravity and the Solar System", topic:"Astronomy",
+    text:`Gravity is the invisible force that keeps planets in orbit around the sun. Every object with mass exerts a {gravitational|5} pull on other objects {nearby|4}. The larger the object, the {stronger|4} its gravity becomes. On Earth, gravity keeps the {atmosphere|4} in place and causes objects to fall when {dropped|3}. Without gravity, the {oceans|3} would float away, the air would {disperse|3}, and life as we know it would be {impossible|3}. It is a truly {fundamental|4} force.` },
+
+  { id:6, level:"easy", title:"Rainforest Ecosystems", topic:"Environment",
+    text:`Tropical rainforests are home to more than half of all plant and animal species on Earth. These dense forests receive {abundant|3} rainfall throughout the year, which supports an {incredible|4} variety of life. Tall trees form a thick {canopy|3} that blocks most {sunlight|3} from reaching the ground. Many animals have {adapted|3} to life high in the {branches|4}. Unfortunately, widespread {logging|3} threatens these {habitats|3}, putting countless {species|3} at serious {risk|2}.` },
+
+  { id:7, level:"easy", title:"Ancient Greek Democracy", topic:"History",
+    text:`Ancient Athens is widely considered the birthplace of democracy. Citizens of Athens {gathered|4} in large assemblies to {debate|3} and vote on important {issues|3}. Unlike modern democracies, this was a {direct|3} system in which every eligible citizen could {participate|4} personally. However, women, slaves, and {foreigners|4} were excluded from the {process|3}. Despite its {limitations|4}, Athenian democracy {inspired|4} political thinkers for {centuries|3} to come.` },
+
+  { id:8, level:"easy", title:"Basic Nutrition", topic:"Medicine",
+    text:`Good nutrition is fundamental to maintaining a healthy body and mind. A balanced diet should include {proteins|4}, carbohydrates, fats, vitamins, and {minerals|4} in appropriate amounts. Fruits and {vegetables|4} provide essential {nutrients|4} that help the immune system fight {disease|3}. Eating too much processed food can lead to {obesity|3} and heart problems. Drinking enough {water|3} is equally {important|3}, as the body needs {hydration|3} to function {properly|4}.` },
+
+  { id:9, level:"easy", title:"The Printing Press", topic:"Technology",
+    text:`Johannes Gutenberg's invention of the printing press around 1440 transformed European society. Before this {innovation|4}, books had to be copied by hand, making them extremely {expensive|3} and rare. The printing press allowed texts to be {produced|3} quickly and in large {quantities|4}. As books became more {affordable|4}, literacy rates began to {increase|3} dramatically. Ideas could now {spread|3} faster than ever, fueling the {Renaissance|4} and the {scientific|4} revolution.` },
+
+  { id:10, level:"easy", title:"Ocean Currents", topic:"Geology",
+    text:`Ocean currents are large movements of water that flow through the world's seas like rivers. These currents are driven by {wind|2}, differences in water {temperature|4}, and the rotation of the {planet|3}. Warm currents carry heat from the {tropics|4} toward the poles, while cold currents flow in the {opposite|4} direction. This {circulation|4} pattern helps regulate the Earth's {climate|3}. Without ocean currents, some {regions|3} would be far colder or {warmer|3} than they are {today|2}.` },
+
+  { id:11, level:"easy", title:"Photosynthesis Basics", topic:"Biology",
+    text:`Photosynthesis is the process by which green plants convert sunlight into food. Using a pigment called {chlorophyll|4}, plants {absorb|3} light energy from the sun. They combine carbon {dioxide|3} from the air with {water|3} from the soil to create {glucose|3}, a simple sugar. Oxygen is released as a {byproduct|3} of this reaction. This process is {essential|3} for life on Earth, as it produces the {oxygen|3} that animals and {humans|3} breathe {daily|3}.` },
+
+  { id:12, level:"easy", title:"The Human Skeleton", topic:"Medicine",
+    text:`The human skeleton consists of 206 bones that provide structure and protection for the body. Bones support our {weight|3} and allow us to {move|2} through the coordinated action of {muscles|3} and joints. The skull {protects|4} the brain, while the rib cage {shields|3} the heart and lungs. Bone marrow, found inside larger bones, {produces|3} red blood cells. As people {age|2}, their bones can become {brittle|4} and more prone to {fractures|4}, making calcium {intake|3} vital.` },
+
+  { id:13, level:"easy", title:"Maps and Navigation", topic:"Technology",
+    text:`For centuries, maps have helped people navigate unfamiliar territory and explore new lands. Early maps were drawn by hand and were often {inaccurate|4}, but they still proved {invaluable|4} to sailors and traders. The invention of the {compass|3} greatly improved navigation by always {pointing|4} north. Today, satellite-based systems provide {precise|3} location data to anyone with a {smartphone|5}. Despite these {advances|3}, the ability to read a {traditional|4} paper map remains a {useful|3} and {practical|4} skill.` },
+
+  { id:14, level:"easy", title:"Recycling and Waste", topic:"Environment",
+    text:`Recycling is the process of converting waste materials into new products to reduce pollution. Many common items such as paper, glass, and {plastic|4} can be recycled {instead|3} of sent to landfills. Recycling conserves natural {resources|3} like timber and {minerals|4} by reducing the need for raw {materials|3}. It also requires less {energy|3} than manufacturing products from scratch. Communities that {embrace|3} recycling programs see {cleaner|4} streets and a {healthier|4} local {environment|4}.` },
+
+  { id:15, level:"easy", title:"Dinosaur Extinction", topic:"Biology",
+    text:`Dinosaurs dominated the Earth for over 160 million years before disappearing approximately 66 million years ago. Most scientists {believe|3} that a massive asteroid impact caused their {extinction|3}. The collision sent enormous clouds of {dust|2} and debris into the {atmosphere|4}, blocking sunlight for {months|3}. Without sunlight, plants died, and the {animals|3} that depended on them soon {followed|3}. This catastrophic event {allowed|3} mammals to rise and eventually {dominate|4} the {planet|3}.` },
+
+  { id:16, level:"easy", title:"Friendship in Childhood", topic:"Psychology",
+    text:`Friendships play a vital role in the social and emotional development of children. Through interaction with peers, children learn to {share|3}, cooperate, and resolve {conflicts|4}. Close friendships provide a sense of {belonging|3} and emotional {support|3} during difficult times. Research shows that children with strong {friendships|4} tend to perform better {academically|4} and have higher self-{esteem|3}. Parents can encourage healthy friendships by {arranging|4} play dates and modeling {positive|3} social {behavior|3}.` },
+
+  { id:17, level:"easy", title:"Simple Machines", topic:"Technology",
+    text:`Simple machines are basic devices that make work easier by changing the direction or magnitude of force. The six classical simple machines include the {lever|3}, the wheel and axle, the {pulley|3}, the inclined plane, the wedge, and the {screw|3}. A lever allows a person to lift a heavy {object|3} with less effort by using a fulcrum. Pulleys help raise heavy loads {vertically|4}. These {principles|4} have been used since {ancient|3} times and still {underpin|4} modern {engineering|4} today.` },
+
+  { id:18, level:"easy", title:"Musical Instruments", topic:"Music",
+    text:`Musical instruments can be divided into several families based on how they produce sound. String instruments like the {violin|3} and guitar create sound through {vibrating|4} strings. Wind instruments such as the flute and {trumpet|4} produce tones when air is blown through them. Percussion instruments, including {drums|3} and cymbals, make sound when {struck|3}. Each family brings a unique {quality|3} to an orchestra, and together they create the rich {textures|4} that make {symphonic|4} music so {powerful|3}.` },
+
+  { id:19, level:"easy", title:"The Seasons", topic:"Astronomy",
+    text:`The Earth's seasons are caused by the tilt of its axis as it orbits the sun. When the Northern Hemisphere tilts toward the sun, that region {experiences|4} summer with longer {days|2} and warmer weather. Six months later, the same hemisphere tilts {away|2}, bringing {winter|3} with shorter days and colder {temperatures|4}. The {transition|4} periods between summer and winter are called {autumn|3} and spring. Near the {equator|3}, seasons are less {pronounced|4} because sunlight hits more {evenly|3} year-round.` },
+
+  { id:20, level:"easy", title:"Public Libraries", topic:"Education",
+    text:`Public libraries have served as community learning centers for hundreds of years. They offer free access to {books|2}, magazines, newspapers, and digital {resources|3}. Beyond lending {materials|4}, modern libraries host educational {programs|4}, workshops, and cultural {events|3}. Librarians help visitors find {reliable|3} information and develop research {skills|3}. In an age of online misinformation, libraries remain {trusted|3} sources of {knowledge|4} and play a {crucial|3} role in promoting literacy.` },
+
+  { id:21, level:"easy", title:"Healthy Exercise Habits", topic:"Medicine",
+    text:`Regular physical exercise provides numerous benefits for both the body and the mind. Activities such as walking, swimming, and cycling {strengthen|4} the heart and improve {circulation|4}. Exercise also releases chemicals called {endorphins|4} that boost mood and reduce {stress|3}. People who exercise {regularly|4} tend to maintain a healthy weight and sleep {better|3} at night. Doctors recommend at least thirty {minutes|3} of moderate activity most days to {prevent|3} chronic {disease|3} and extend {lifespan|4}.` },
+
+  { id:22, level:"easy", title:"Deserts of the World", topic:"Geology",
+    text:`Deserts cover about one-third of the Earth's land surface and are defined by extremely low rainfall. Despite harsh {conditions|4}, many plants and animals have {adapted|3} to survive in these arid {environments|4}. Cacti store water in their thick {stems|3}, while desert foxes have large ears to release excess {heat|2}. Not all deserts are hot; the {Antarctic|3} is technically the largest desert on {Earth|3}. Human {settlements|4} in desert regions often depend on {underground|4} water sources called {aquifers|4}.` },
+
+  { id:23, level:"easy", title:"Telling Time Through History", topic:"History",
+    text:`Humans have measured time in different ways throughout history. Ancient civilizations used {sundials|3} to track the movement of the sun's {shadow|3} across the ground. Water clocks {measured|4} time by the steady flow of {liquid|3} from one container to another. Mechanical clocks with gears {appeared|3} in medieval Europe, greatly improving {accuracy|3}. Today, atomic clocks are so {precise|3} that they lose less than one {second|3} every million {years|3}, enabling GPS and modern {communication|4}.` },
+
+  { id:24, level:"easy", title:"Butterflies and Metamorphosis", topic:"Biology",
+    text:`Butterflies undergo a remarkable transformation known as metamorphosis during their life cycle. They begin as tiny {eggs|2} laid on the leaves of specific host {plants|3}. After hatching, the larva, or {caterpillar|4}, spends most of its time {eating|3} and growing larger. It then forms a protective shell called a {chrysalis|4}, inside which its body completely {reorganizes|4}. When the adult butterfly {emerges|3}, it can fly and {reproduce|4}, starting the {cycle|2} over {again|2}.` },
+
+  { id:25, level:"easy", title:"Farm Animals and Agriculture", topic:"Biology",
+    text:`Farm animals have been central to human agriculture for thousands of years. Cattle provide {meat|2}, milk, and leather, while {sheep|3} supply wool and mutton. Chickens are raised for their eggs and {poultry|4} meat. Horses once served as the {primary|3} source of transportation and farm {labor|3} before machines took over. Today, modern farms use advanced {technology|4} to monitor animal {health|3} and increase {productivity|4}. Sustainable farming {practices|4} aim to balance profit with {animal|3} welfare.` },
+
+  { id:26, level:"easy", title:"Caves and Caverns", topic:"Geology",
+    text:`Caves are natural underground spaces formed over thousands of years by the action of water on rock. Rainwater, slightly acidic from dissolved carbon {dioxide|3}, slowly dissolves {limestone|4} to create these {hollow|3} chambers. Inside caves, mineral-rich water drips from the {ceiling|4} to form hanging structures called {stalactites|4}. Deposits that build up from the {floor|3} are called stalagmites. Caves provide {shelter|3} for animals like bats and were used by early {humans|3} as living {spaces|3} and sites for {painting|4}.` },
+
+  { id:27, level:"easy", title:"Cooking and Culture", topic:"Anthropology",
+    text:`Cooking is a universal human activity that reflects cultural traditions and local ingredients. Every society has developed unique {recipes|3} passed down through {generations|4}. In many cultures, sharing a meal is an important social {ritual|3} that strengthens family {bonds|3}. Spices and herbs not only add {flavor|3} but also have medicinal {properties|4}. The rise of global travel has made it {possible|3} for people to enjoy {diverse|3} cuisines from around the {world|3}, blending traditions in {exciting|3} new ways.` },
+
+  { id:28, level:"easy", title:"Rivers and Civilizations", topic:"History",
+    text:`Many of the world's earliest civilizations developed along major rivers. The Nile, Tigris, Euphrates, and Indus rivers all {provided|4} fertile land for growing {crops|2}. Annual flooding deposited rich {soil|2} along the riverbanks, making agriculture {possible|4} in otherwise dry regions. Rivers also served as {natural|3} highways for trade and {transportation|5}. Cities grew along these {waterways|4}, and governments formed to manage water {resources|4} and settle {disputes|3} among {farming|4} communities.` },
+
+  { id:29, level:"easy", title:"Colors and Emotions", topic:"Psychology",
+    text:`Colors can have a powerful effect on human emotions and behavior. Research suggests that warm colors such as red and {orange|3} tend to evoke feelings of energy and {excitement|4}. Cooler tones like blue and green are {associated|4} with calm and {relaxation|4}. Advertisers use color {psychology|4} to influence purchasing {decisions|4}, while hospitals often choose {soothing|4} colors to reduce patient {anxiety|3}. Individual responses to color may also be shaped by {cultural|3} background and personal {experience|4}.` },
+
+  { id:30, level:"easy", title:"Clouds and Weather", topic:"Geology",
+    text:`Clouds form when water vapor in the atmosphere cools and condenses around tiny particles of dust. Different types of clouds are {associated|4} with different weather {conditions|4}. Cumulus clouds, which look like fluffy white {cotton|3}, usually indicate fair {weather|3}. Dark, heavy nimbus clouds signal approaching {rain|2} or storms. High, thin cirrus clouds are made of ice {crystals|4} and often appear on {sunny|3} days. Meteorologists study cloud {patterns|4} to help {forecast|4} the weather {accurately|4}.` },
+
+  // ===== MEDIUM (31–70) =====
+  { id:31, level:"medium", title:"Photosynthesis and Energy", topic:"Biology",
+    text:`Photosynthesis is the biochemical mechanism by which green plants convert sunlight into chemical energy. Using {chlorophyll|4} in their leaves, plants {absorb|3} light and combine carbon dioxide with water to {synthesize|4} glucose, releasing oxygen as a {byproduct|3}. This reaction {sustains|3} nearly all terrestrial {ecosystems|3} and forms the base of the food {chain|2}. Without it, the atmosphere would become {uninhabitable|4} for most {complex|3} organisms that depend on {oxygen|3}.` },
+
+  { id:32, level:"medium", title:"The Industrial Revolution", topic:"History",
+    text:`The Industrial Revolution transformed eighteenth-century Britain into the world's first modern economy. Advances in steam {technology|4} made it possible to {manufacture|4} goods on a massive scale, drawing rural workers into rapidly expanding {urban|3} centers. Factories introduced a new kind of labor {discipline|4}, while cheap textiles reshaped daily {consumption|4}. However, the period also brought serious {environmental|5} damage, widespread {poverty|3} in city slums, and political {unrest|2} that echoed for a {century|3} and fundamentally altered {society|3}.` },
+
+  { id:33, level:"medium", title:"Plate Tectonics", topic:"Geology",
+    text:`The theory of plate tectonics explains how the Earth's rigid outer shell is divided into slowly moving fragments. These plates drift across the softer rock {beneath|3} them, driven by heat currents from the planet's {interior|3}. Where plates {collide|3}, enormous mountain ranges are gradually {uplifted|3}. Where they pull apart, molten material rises to form new {oceanic|4} crust. Earthquakes and {volcanic|4} activity typically {occur|2} along the {boundaries|4} between plates, making these zones {perilous|3} for human {settlement|4}.` },
+
+  { id:34, level:"medium", title:"Coral Reef Ecology", topic:"Environment",
+    text:`Coral reefs are among the most biologically diverse ecosystems on Earth. They are built over thousands of years by tiny {polyps|3} that secrete hard calcium {carbonate|4} skeletons. Reefs provide {shelter|3} and breeding grounds for roughly a {quarter|3} of all marine {species|3}. Rising ocean temperatures and increasing {acidity|3} threaten to {bleach|3} and ultimately {destroy|4} these delicate {habitats|3}. Conservation efforts now focus on reducing {pollution|4} and establishing marine protected areas.` },
+
+  { id:35, level:"medium", title:"Renaissance Art and Perspective", topic:"Art",
+    text:`The Italian Renaissance brought a remarkable revival of interest in classical learning and human-centered art. Painters like Leonardo da Vinci studied {anatomy|3} to depict the human body with unprecedented {realism|3}. The development of linear {perspective|4} allowed artists to create convincing three-dimensional {illusions|4} on flat surfaces. Wealthy {patrons|3} in Florence {commissioned|5} grand works that glorified both {religious|4} themes and civic {pride|3}. Their {aesthetic|3} innovations spread across Europe and remain {influential|4} today.` },
+
+  { id:36, level:"medium", title:"Classical Music Structure", topic:"Music",
+    text:`Classical music emerged in Europe during the seventeenth and eighteenth centuries as a highly structured art form. Composers such as Bach and Mozart used mathematical {principles|4} of harmony to create works of remarkable {complexity|4}. Audiences regarded concerts as both intellectual and social {occasions|4}. Unlike folk music, classical {compositions|4} were preserved in written {notation|3}, allowing future {generations|4} to perform them {accurately|4}. The {symphony|3} became the dominant orchestral form and remains {venerated|3} by musicians {worldwide|4}.` },
+
+  { id:37, level:"medium", title:"Behavioral Economics", topic:"Economics",
+    text:`Behavioral economics challenges the traditional assumption that people always make rational financial decisions. Research by Kahneman and Tversky revealed that individuals are often {influenced|3} by cognitive biases such as loss {aversion|3} and anchoring. People tend to {overvalue|4} immediate rewards while {discounting|4} future benefits, a pattern called {hyperbolic|4} discounting. These findings have {profound|3} implications for public policy, leading governments to design {incentives|4} that gently nudge citizens toward {prudent|3} choices without restricting {freedom|4} of {action|3}.` },
+
+  { id:38, level:"medium", title:"The Immune System", topic:"Medicine",
+    text:`The human immune system is a complex network of cells and proteins that defends the body against infection. White blood cells {patrol|3} the bloodstream, identifying and {destroying|4} harmful bacteria and {viruses|3}. When a new pathogen is encountered, the body produces {antibodies|4} specifically designed to neutralize it. This process creates {immunological|5} memory, enabling a faster response if the same invader {returns|3}. Vaccines exploit this {mechanism|4} by introducing weakened forms of a pathogen to build {resilient|3} long-term {protection|4}.` },
+
+  { id:39, level:"medium", title:"Deforestation and Carbon", topic:"Environment",
+    text:`Deforestation contributes significantly to climate change by releasing stored carbon dioxide into the atmosphere. Trees naturally {absorb|3} carbon during photosynthesis, acting as vital carbon {sinks|3}. When forests are cleared for agriculture or {development|4}, that stored carbon is released, {accelerating|4} global warming. Deforestation also reduces {biodiversity|4}, disrupts water cycles, and degrades {soil|2} quality. International agreements now {encourage|3} reforestation and sustainable forestry as {essential|4} strategies for {mitigating|4} climate {change|3}.` },
+
+  { id:40, level:"medium", title:"The Scientific Method", topic:"Education",
+    text:`The scientific method is a systematic approach to understanding the natural world through observation and experimentation. A researcher first {formulates|4} a hypothesis based on preliminary {observations|4}. This hypothesis is then tested through carefully {controlled|4} experiments designed to produce {measurable|4} results. If the data consistently {support|3} the hypothesis, it gains {credibility|4}; if not, the hypothesis must be {revised|3} or abandoned. Peer review ensures that {findings|3} are {scrutinized|4} before being accepted by the scientific {community|4}.` },
+
+  { id:41, level:"medium", title:"Urbanization Trends", topic:"Sociology",
+    text:`Urbanization refers to the increasing concentration of populations in cities and metropolitan areas. Since the mid-twentieth century, rapid {migration|3} from rural to urban areas has {transformed|4} the social fabric of many {developing|4} nations. Cities offer greater economic {opportunity|4} and access to services like healthcare and {education|3}. However, unplanned growth often leads to {overcrowding|4}, pollution, and inadequate {infrastructure|4}. Urban planners must {balance|3} economic development with livable {conditions|4} to create sustainable {communities|4}.` },
+
+  { id:42, level:"medium", title:"Language Acquisition", topic:"Linguistics",
+    text:`Children acquire language at a remarkable speed during the first few years of life. By age two, most children can {produce|3} simple sentences and understand {hundreds|4} of words. Linguists believe that the human brain contains an innate language {faculty|3} that enables this rapid {acquisition|4}. Exposure to speech is {critical|3} during a sensitive period; children deprived of linguistic {input|2} during early years struggle to develop {fluency|3} later. Bilingual children often show enhanced {cognitive|3} flexibility and superior {attention|4} control in certain {tasks|3}.` },
+
+  { id:43, level:"medium", title:"Volcanic Soil Fertility", topic:"Geology",
+    text:`Although volcanic eruptions can be devastatingly destructive, they also create some of the most fertile soil on the planet. Volcanic ash contains {minerals|3} such as potassium, phosphorus, and calcium that {nourish|3} plant growth. Over time, weathering breaks down lava rock into rich, {porous|3} soil ideal for agriculture. Many of the world's most {productive|4} farming regions, including parts of Indonesia and Central {America|3}, owe their {abundance|4} to ancient volcanic {activity|3}. Farmers in these regions {cultivate|4} crops with {exceptional|4} yields despite the ever-present {threat|3} of eruption.` },
+
+  { id:44, level:"medium", title:"The Psychology of Persuasion", topic:"Psychology",
+    text:`Persuasion is a fundamental aspect of human communication studied extensively by social psychologists. Robert Cialdini identified six key {principles|4} that explain why people {comply|3} with requests: reciprocity, commitment, social proof, {authority|4}, liking, and scarcity. Advertisers routinely {exploit|3} these principles to influence consumer {behavior|3}. For example, limited-time offers create a sense of {urgency|3} that overrides rational {deliberation|4}. Understanding these {mechanisms|4} can help individuals become more {discerning|4} consumers and resist {manipulative|4} tactics.` },
+
+  { id:45, level:"medium", title:"Gothic Architecture", topic:"Architecture",
+    text:`Gothic architecture emerged in twelfth-century France and dominated European church construction for nearly four hundred years. Its defining features include pointed {arches|3}, ribbed vaults, and flying {buttresses|4} that allowed walls to be thinner and {windows|3} much larger. Enormous stained-glass {panels|3} flooded interiors with colored light, creating an {atmosphere|4} intended to inspire religious {devotion|4}. The sheer {height|3} of Gothic cathedrals was meant to {symbolize|4} humanity's aspiration toward the {divine|3}. Many of these {structures|4} still stand as engineering marvels today.` },
+
+  { id:46, level:"medium", title:"Supply and Demand", topic:"Economics",
+    text:`The law of supply and demand is one of the most fundamental concepts in economics. When the supply of a {product|3} increases while demand stays {constant|3}, prices tend to {decline|3}. Conversely, when demand rises and supply cannot keep pace, prices {escalate|3}. Market {equilibrium|4} occurs when supply and demand are {balanced|3}, resulting in a stable price. External factors such as government {regulation|4}, technological change, and consumer {preferences|4} constantly {disrupt|3} this balance, causing prices to {fluctuate|4}.` },
+
+  { id:47, level:"medium", title:"Human Rights History", topic:"Law",
+    text:`The concept of universal human rights gained international prominence after the horrors of World War Two. The United Nations adopted the Universal {Declaration|4} of Human Rights in 1948, {establishing|4} that all people are entitled to basic freedoms regardless of nationality. These include the right to life, {liberty|3}, and security of person, as well as freedom of {expression|4} and religion. Despite widespread {endorsement|4}, enforcement remains {inconsistent|4}. Many nations continue to {violate|3} these principles, prompting ongoing {advocacy|4} by international {organizations|4}.` },
+
+  { id:48, level:"medium", title:"Artificial Intelligence Ethics", topic:"Technology",
+    text:`As artificial intelligence systems become increasingly capable, ethical concerns have grown more urgent. Algorithms that make decisions about hiring, lending, and criminal {sentencing|4} can perpetuate existing social {biases|3} if trained on {prejudiced|4} data. The opacity of complex neural networks makes it {difficult|3} to explain why a particular decision was {reached|3}. Researchers advocate for {transparent|4} AI systems that are {accountable|4} to the public. Establishing {regulatory|4} frameworks that balance {innovation|4} with fairness remains a pressing {challenge|4}.` },
+
+  { id:49, level:"medium", title:"Migration in the Animal Kingdom", topic:"Biology",
+    text:`Many animal species undertake long seasonal migrations in search of food, warmth, or breeding grounds. Arctic terns travel from pole to pole, covering roughly forty thousand {kilometers|4} each year. Monarch butterflies {migrate|3} thousands of miles from Canada to central {Mexico|3}, guided by an internal {compass|3} that scientists still do not fully {understand|4}. Wildebeest in Africa cross crocodile-infested {rivers|3} in vast herds, driven by {instinct|3} and the promise of fresh {grasslands|4}. These journeys are {arduous|3} and fraught with {danger|3}.` },
+
+  { id:50, level:"medium", title:"The Sociology of Education", topic:"Sociology",
+    text:`Education systems both reflect and reinforce the social structures of the societies they serve. Sociologists have long argued that schools do more than transmit {knowledge|4}; they also {reproduce|4} class hierarchies by providing unequal {resources|3} to different communities. Students from {affluent|3} backgrounds often attend better-funded schools with smaller class sizes and more {experienced|4} teachers. This disparity can {perpetuate|4} cycles of poverty across {generations|4}. Policies aimed at {equalizing|4} educational opportunity remain {contentious|4} and politically {divisive|3}.` },
+
+  { id:51, level:"medium", title:"Tectonic Earthquakes", topic:"Geology",
+    text:`Earthquakes occur when accumulated stress along tectonic plate boundaries is suddenly released as seismic energy. The point of origin beneath the surface is called the {hypocenter|4}, while the point directly above on the surface is the {epicenter|3}. Seismic waves {radiate|3} outward, causing the ground to {tremble|4} and sometimes triggering devastating {landslides|4} or tsunamis. Engineers design {earthquake|4}-resistant buildings using flexible {materials|4} and deep foundations to {mitigate|3} structural damage. Early warning systems can provide {precious|3} seconds of advance {notice|3}.` },
+
+  { id:52, level:"medium", title:"Philosophy of Ethics", topic:"Philosophy",
+    text:`Ethics is the branch of philosophy concerned with determining what is morally right and wrong. Consequentialist theories judge actions by their {outcomes|3}, while deontological theories focus on {adherence|3} to rules and duties. Virtue ethics, rooted in Aristotle's {philosophy|4}, emphasizes the development of good {character|4} traits such as courage and {temperance|4}. These competing {frameworks|4} often yield different conclusions when applied to real-world {dilemmas|3}. Ethical reasoning remains {indispensable|4} in fields like medicine, law, and {public|3} policy {formulation|4}.` },
+
+  { id:53, level:"medium", title:"Antibiotics and Resistance", topic:"Medicine",
+    text:`The discovery of antibiotics in the twentieth century revolutionized medicine by enabling doctors to treat bacterial infections effectively. However, the overuse and misuse of these drugs has led to the emergence of {resistant|3} bacterial strains. When antibiotics are prescribed {unnecessarily|4} or patients fail to complete their {prescribed|4} course, surviving bacteria can {adapt|2} and multiply. These so-called superbugs pose a growing {threat|3} to global health, as fewer {effective|3} treatments remain {available|4}. Researchers are now {exploring|3} novel approaches, including {bacteriophage|4} therapy, to combat this {crisis|3}.` },
+
+  { id:54, level:"medium", title:"Political Campaigns", topic:"Political Science",
+    text:`Modern political campaigns are sophisticated operations that blend data analytics with emotional messaging. Candidates employ teams of strategists who {analyze|3} voter demographics and tailor {messages|3} to specific audiences. Television {advertisements|4}, social media outreach, and grassroots {canvassing|4} all play crucial roles. Campaigns must {balance|3} policy substance with personal {charisma|4} to attract undecided voters. Critics argue that the enormous cost of modern {campaigns|4} gives {affluent|3} candidates an unfair {advantage|3}, undermining democratic {equality|4}.` },
+
+  { id:55, level:"medium", title:"Memory and Forgetting", topic:"Psychology",
+    text:`Memory is not a perfect recording of past events but rather a constructive process subject to distortion. Hermann Ebbinghaus demonstrated that most {forgetting|3} occurs shortly after learning, following a predictable {decay|3} curve. Interference from similar {memories|3} can further {impair|3} recall, a phenomenon called proactive {inhibition|4}. Emotional events tend to be {remembered|4} more vividly, though even these memories can be {inaccurate|4}. Mnemonic {techniques|4} such as spaced repetition can {ameliorate|4} the natural tendency to {forget|3} newly learned information.` },
+
+  { id:56, level:"medium", title:"Wind Energy Technology", topic:"Technology",
+    text:`Wind energy has become one of the fastest-growing sources of renewable electricity worldwide. Modern wind turbines convert the kinetic energy of moving air into {electrical|4} power through large rotating {blades|3} connected to a generator. Offshore wind farms, situated in {coastal|4} waters where winds are stronger and more {consistent|4}, are increasingly {popular|3}. However, turbines can pose a {threat|3} to migratory birds and {generate|4} noise that concerns nearby {residents|4}. Engineers continue to {refine|3} turbine designs to {maximize|3} efficiency and minimize environmental {impact|3}.` },
+
+  { id:57, level:"medium", title:"Ancient Roman Law", topic:"Law",
+    text:`Roman law laid the foundation for legal systems across much of the modern Western world. The Twelve Tables, published around 450 BCE, codified citizens' rights and {obligations|4} for the first time. Roman jurists developed sophisticated {concepts|3} such as legal {precedent|4}, contractual obligation, and the distinction between public and {private|3} law. These principles were later {compiled|3} in the Justinian Code, which {influenced|4} medieval European {legislation|4}. The {enduring|3} legacy of Roman {jurisprudence|4} is evident in contemporary civil law {traditions|4}.` },
+
+  { id:58, level:"medium", title:"Impressionist Painting", topic:"Art",
+    text:`Impressionism emerged in late nineteenth-century France as a radical departure from academic painting conventions. Artists like Monet and Renoir sought to capture the {fleeting|3} effects of light and {atmosphere|4} rather than precise detail. They painted outdoors, using loose {brushstrokes|4} and vivid colors applied directly to the {canvas|3}. Critics initially {derided|3} the movement, but Impressionist works gradually won public {admiration|4}. The emphasis on subjective {perception|4} over objective {accuracy|3} paved the way for the many {avant|3}-garde movements that {followed|3}.` },
+
+  { id:59, level:"medium", title:"Biodiversity and Ecosystems", topic:"Environment",
+    text:`Biodiversity refers to the variety of life forms within an ecosystem and is critical to its long-term stability. A diverse ecosystem can better {withstand|4} environmental disturbances such as drought, disease, and {invasive|3} species. Each organism plays a specific role; the loss of even a single species can trigger a {cascade|3} of effects throughout the food web. Tropical {rainforests|4} and coral reefs harbor the greatest {concentration|4} of species, yet both face {unprecedented|4} threats from human {activity|3}. Preserving biodiversity requires {concerted|3} international {cooperation|4}.` },
+
+  { id:60, level:"medium", title:"The Sociology of Religion", topic:"Sociology",
+    text:`Sociologists study religion not to evaluate its truth claims but to understand its social functions and influence. Emile Durkheim argued that religious rituals {reinforce|3} social solidarity by bringing communities together around shared {beliefs|3}. Max Weber explored how certain {religious|4} ethics, particularly the Protestant work ethic, helped {engender|3} the spirit of capitalism. In modern societies, {secularization|4} has reduced the public influence of {organized|4} religion, yet spiritual {practices|4} continue to provide meaning and {comfort|3} to billions. The relationship between faith and {society|3} remains a {vibrant|3} area of inquiry.` },
+
+  { id:61, level:"medium", title:"The Endocrine System", topic:"Medicine",
+    text:`The endocrine system is a network of glands that produce hormones to regulate bodily functions. The pituitary gland, often called the master gland, {secretes|3} hormones that control growth, {metabolism|4}, and reproductive {processes|4}. The thyroid gland regulates how quickly the body uses {energy|3}, while the adrenal glands produce cortisol in response to {stress|3}. Hormonal {imbalances|3} can lead to conditions such as diabetes, thyroid {disorders|3}, and growth {abnormalities|4}. Endocrinologists use blood tests to {diagnose|4} these conditions and prescribe {targeted|4} treatments.` },
+
+  { id:62, level:"medium", title:"International Trade", topic:"Economics",
+    text:`International trade allows countries to specialize in producing goods for which they have a comparative advantage. A nation with fertile land may {export|3} agricultural products, while one with advanced {technology|4} may sell electronics and {machinery|4}. Trade increases the total amount of goods {available|3} to consumers and can lower {prices|3} through competition. However, it can also lead to job {displacement|3} in industries unable to compete with cheaper foreign {imports|3}. Governments use {tariffs|3} and trade agreements to {regulate|3} the flow of goods across {borders|3}.` },
+
+  { id:63, level:"medium", title:"Cognitive Development in Children", topic:"Psychology",
+    text:`Jean Piaget proposed that children pass through four distinct stages of cognitive development as they mature. In the sensorimotor stage, infants learn about the world through physical {interaction|4}. During the preoperational stage, children develop {language|3} but struggle with logical {reasoning|4}. The concrete operational stage brings the ability to think {systematically|4} about tangible objects. Finally, in the formal operational stage, {adolescents|4} can engage in {abstract|3} thought and hypothetical {reasoning|4}. Piaget's framework, though later {refined|3}, remains {foundational|4} in developmental psychology.` },
+
+  { id:64, level:"medium", title:"Space Exploration Milestones", topic:"Astronomy",
+    text:`Space exploration has achieved remarkable milestones since the launch of Sputnik in 1957. Yuri Gagarin became the first human in space in 1961, and Neil Armstrong walked on the moon just eight years {later|3}. Robotic probes have {explored|3} every planet in our solar system and sent back {invaluable|4} scientific data. The International Space Station has hosted {continuous|4} human presence in orbit since 2000. Future missions aim to establish {permanent|4} bases on the moon and eventually send {crewed|3} expeditions to {Mars|2}, an {endeavor|3} requiring unprecedented international {collaboration|4}.` },
+
+  { id:65, level:"medium", title:"Literary Symbolism", topic:"Literature",
+    text:`Symbolism is a literary technique in which objects, characters, or events represent abstract ideas beyond their literal meaning. In Nathaniel Hawthorne's work, the scarlet letter {symbolizes|4} both shame and {resilience|4}. Herman Melville used the white whale as a {metaphor|3} for humanity's {futile|3} pursuit of the unknowable. Symbols allow authors to convey {nuanced|3} themes without {explicit|3} explanation, inviting readers to {interpret|4} meaning through their own {experience|4}. This layered approach gives literary texts {enduring|3} richness and {ambiguity|4}.` },
+
+  { id:66, level:"medium", title:"Renewable Energy Storage", topic:"Technology",
+    text:`One of the greatest challenges facing renewable energy is the intermittent nature of sources like wind and solar. Energy storage systems are {essential|3} for capturing surplus power generated during {favorable|3} conditions and releasing it during periods of high {demand|3}. Lithium-ion batteries currently {dominate|3} the market, but their limited {lifespan|4} and reliance on rare minerals pose {sustainability|4} concerns. Researchers are {investigating|4} alternatives such as solid-state batteries, compressed air {storage|3}, and hydrogen fuel cells. Breakthroughs in storage {technology|4} could {accelerate|4} the global transition to clean {energy|3}.` },
+
+  { id:67, level:"medium", title:"The Silk Road", topic:"History",
+    text:`The Silk Road was a vast network of trade routes that connected East Asia with the Mediterranean world for over a thousand years. Merchants {transported|4} silk, spices, precious metals, and gemstones across {treacherous|4} deserts and mountain passes. Beyond goods, the routes {facilitated|4} the exchange of ideas, religions, and {technologies|4} between distant civilizations. Paper, gunpowder, and the compass all {traveled|3} westward along these paths. The Silk Road {declined|3} after maritime trade routes offered faster, cheaper {alternatives|4}, but its cultural {legacy|3} endures to this {day|2}.` },
+
+  { id:68, level:"medium", title:"Adolescent Brain Development", topic:"Psychology",
+    text:`Neuroscientists have discovered that the human brain continues to develop well into the mid-twenties. During adolescence, the prefrontal cortex, which {governs|3} decision-making and impulse control, is still {maturing|3}. Meanwhile, the limbic system, responsible for {emotional|3} responses, is already highly active. This {imbalance|3} helps explain why teenagers are often drawn to {risky|3} behavior despite understanding the potential {consequences|4}. Sleep patterns also shift during {adolescence|4}, causing a biological {preference|4} for later bedtimes. Schools that {accommodate|4} these changes with later start times report improved academic {performance|4}.` },
+
+  { id:69, level:"medium", title:"Sustainable Architecture", topic:"Architecture",
+    text:`Sustainable architecture aims to minimize the environmental impact of buildings throughout their entire life cycle. Designers incorporate energy-efficient {materials|4}, natural ventilation, and solar panels to reduce a building's carbon {footprint|4}. Green roofs covered with {vegetation|4} help insulate structures and manage storm water {runoff|3}. Passive design strategies use the building's {orientation|4} and window {placement|4} to maximize natural light while minimizing heat {gain|2}. As climate {regulations|4} grow stricter, sustainable {practices|4} are becoming the norm rather than the {exception|3}.` },
+
+  { id:70, level:"medium", title:"Evolution and Natural Selection", topic:"Biology",
+    text:`Charles Darwin's theory of evolution by natural selection remains one of the most influential ideas in the history of science. Organisms produce more offspring than the {environment|4} can support, leading to competition for limited {resources|3}. Individuals with traits better suited to their surroundings are more likely to {survive|3} and reproduce, passing those {advantageous|4} traits to the next generation. Over vast periods of time, this process can produce entirely new {species|3}. Fossil records and genetic {evidence|3} overwhelmingly {corroborate|4} Darwin's {original|3} insights into the {mechanisms|4} of change.` },
+
+  // ===== HARD (71–100) =====
+  { id:71, level:"hard", title:"Quantum Mechanics and Reality", topic:"Astronomy",
+    text:`Quantum mechanics fundamentally overturned classical notions of determinism in the early twentieth century. At the subatomic scale, particles exist in a {superposition|5} of multiple possible states, and their behavior can only be described by {probability|4} distributions until a measurement is performed. This strange principle, known as wave-function {collapse|3}, continues to provoke philosophical {controversy|4}. The phenomenon of quantum {entanglement|4} further challenges intuition, as paired particles appear to {communicate|4} instantaneously across vast {distances|3}. Despite its {enigmatic|3} nature, quantum theory has been {experimentally|4} verified with extraordinary {precision|3}.` },
+
+  { id:72, level:"hard", title:"Economic Recessions and Policy", topic:"Economics",
+    text:`Economists have long debated the underlying causes of recessions and the policies best suited to recovery. Some argue that downturns result from insufficient consumer {demand|3}, which can be {remedied|3} through government spending and lower interest {rates|3}. Others maintain that recessions {originate|4} in structural {imbalances|4} that must correct themselves {naturally|3}. Keynesian and monetarist schools remain {irreconcilable|4} on this point. Most governments today {intervene|4} aggressively when {unemployment|4} begins to rise, fearing the political {consequences|4} of {inaction|3}.` },
+
+  { id:73, level:"hard", title:"Epigenetics and Gene Expression", topic:"Biology",
+    text:`Epigenetics studies heritable changes in gene expression that occur without alterations to the underlying DNA sequence. Environmental factors such as diet, stress, and {exposure|3} to toxins can activate or silence genes by modifying the chemical {markers|3} attached to DNA. These epigenetic {modifications|4} can sometimes be {transmitted|4} across generations, challenging the traditional view that inheritance is solely {determined|4} by genetic code. Research in this field has revealed that {identical|3} twins can develop markedly different health {profiles|3} despite sharing the same {genome|3}. Such findings have {profound|3} implications for {personalized|4} medicine.` },
+
+  { id:74, level:"hard", title:"Existentialist Philosophy", topic:"Philosophy",
+    text:`Existentialism emerged in the twentieth century as a philosophical movement centered on individual freedom, choice, and responsibility. Jean-Paul Sartre argued that existence {precedes|4} essence, meaning that humans are not born with a fixed {nature|3} but must define themselves through their {actions|3}. This radical freedom, however, produces {anguish|3} because every choice carries {irreversible|4} consequences. Kierkegaard had earlier explored similar themes through the lens of religious {faith|3}, while Camus confronted the apparent {absurdity|3} of a universe {devoid|3} of inherent meaning. Despite its {somber|3} reputation, existentialism {ultimately|4} affirms human agency.` },
+
+  { id:75, level:"hard", title:"Neural Networks and Deep Learning", topic:"Technology",
+    text:`Artificial neural networks are computational models loosely inspired by the architecture of biological brains. They consist of interconnected layers of processing units that {progressively|4} transform raw input into abstract {representations|4}. During training, the network adjusts millions of internal {parameters|4} by comparing predictions against known {outcomes|3}. This iterative process, guided by {backpropagation|4}, allows the system to {minimize|3} error and achieve surprisingly {sophisticated|5} performance. However, these models remain {inscrutable|4}, and their tendency to {perpetuate|4} biases embedded in training data raises serious {ethical|3} concerns.` },
+
+  { id:76, level:"hard", title:"Climate Policy and Carbon Markets", topic:"Environment",
+    text:`Designing effective climate policy requires governments to reconcile competing economic and environmental priorities. Emissions trading schemes harness market {incentives|4} by allowing companies to buy and sell pollution {allowances|4}. Carbon taxes impose a direct financial {penalty|3} on greenhouse gas emissions, aiming to {internalize|4} the social cost of carbon. Both approaches seek to {accelerate|4} the transition to renewable energy while minimizing {disruption|4} to industry. Critics argue that current targets remain {insufficient|4} to prevent {catastrophic|4} warming, demanding far more {ambitious|3} international {cooperation|4}.` },
+
+  { id:77, level:"hard", title:"Postcolonial Literature", topic:"Literature",
+    text:`Postcolonial literature explores the cultural, psychological, and political aftermath of European colonialism across the globe. Writers such as Chinua Achebe and Salman Rushdie {interrogate|4} the ways in which colonial powers imposed their {languages|3}, values, and institutions on {indigenous|4} populations. Their works reveal how colonized peoples {negotiated|4} identity between tradition and the {hegemonic|4} culture of the colonizer. Hybrid literary forms that blend oral {traditions|4} with Western narrative {conventions|4} challenge rigid cultural {boundaries|4}. This body of literature remains {indispensable|4} for understanding global {inequalities|4}.` },
+
+  { id:78, level:"hard", title:"Neurodegenerative Diseases", topic:"Medicine",
+    text:`Neurodegenerative diseases such as Alzheimer's and Parkinson's involve the progressive loss of neurons in the brain. In Alzheimer's, abnormal protein {deposits|3} called amyloid plaques and tau tangles {accumulate|4}, disrupting communication between brain cells. Parkinson's is characterized by the {deterioration|4} of dopamine-producing neurons in the {substantia|4} nigra, leading to tremors and impaired {movement|3}. Despite decades of research, effective treatments remain {elusive|3}, partly because symptoms often {manifest|3} only after substantial {irreversible|4} damage has occurred. Early {diagnostic|4} tools and neuroprotective {therapies|4} are now urgent research priorities.` },
+
+  { id:79, level:"hard", title:"Game Theory in Politics", topic:"Political Science",
+    text:`Game theory provides a mathematical framework for analyzing strategic interactions where the outcome for each participant depends on the decisions of others. In political science, it has been applied to arms races, {diplomatic|4} negotiations, and voting {behavior|3}. The prisoner's dilemma illustrates how rational actors can reach {suboptimal|3} outcomes when they {prioritize|4} self-interest over collective welfare. Nash {equilibrium|4} describes a state in which no player can benefit by {unilaterally|4} changing strategy. Though {elegantly|4} abstract, game theory oversimplifies the {capricious|4} nature of real-world political {decision|3}-making.` },
+
+  { id:80, level:"hard", title:"String Theory and Extra Dimensions", topic:"Astronomy",
+    text:`String theory proposes that the fundamental constituents of the universe are not point-like particles but tiny vibrating strings of energy. Different vibrational {frequencies|4} give rise to the diverse particles observed in nature. The theory requires the existence of additional spatial {dimensions|4} beyond the three we {perceive|3}, possibly curled up at scales too small to detect. While mathematically {elegant|3}, string theory has yet to produce {testable|4} predictions, leading some physicists to {question|3} its scientific {validity|3}. Proponents argue that its {unifying|3} potential justifies continued {theoretical|4} investigation and {collaboration|4}.` },
+
+  { id:81, level:"hard", title:"Cryptography and Information Security", topic:"Technology",
+    text:`Modern cryptography underpins the security of virtually all digital communication and financial transactions. Public-key encryption, first {conceived|3} in the 1970s, allows two parties to exchange {confidential|4} information without sharing a secret key in advance. The security of these systems rests on the computational {difficulty|3} of factoring extremely large prime numbers. Quantum computing, however, threatens to {render|3} current encryption methods {obsolete|3} by solving such problems {exponentially|4} faster. Post-quantum {cryptographic|4} algorithms are being {developed|3} to safeguard data against this {imminent|3} technological {disruption|4}.` },
+
+  { id:82, level:"hard", title:"The Anthropocene Epoch", topic:"Environment",
+    text:`Some geologists have proposed designating a new geological epoch called the Anthropocene to mark the period in which human activity became the dominant force shaping the planet. Evidence includes the global {distribution|4} of radioactive isotopes from nuclear testing, the {ubiquitous|4} presence of plastic in sediment layers, and accelerated rates of species {extinction|4}. Proponents argue that recognizing the {Anthropocene|4} would underscore humanity's {profound|3} impact on Earth systems. Skeptics {contend|3} that the concept is more {political|3} than geological, noting the {difficulty|4} of defining a precise {stratigraphic|4} boundary.` },
+
+  { id:83, level:"hard", title:"Phenomenology in Philosophy", topic:"Philosophy",
+    text:`Phenomenology is a philosophical tradition founded by Edmund Husserl that investigates the structures of conscious experience. Husserl proposed that by {suspending|4} our natural assumptions about the external world, a method he called the {epoché|3}, we can examine the essential features of perception and {cognition|3}. Martin Heidegger extended this inquiry into the question of Being itself, arguing that human existence is fundamentally {characterized|4} by being-in-the-world. Maurice Merleau-Ponty focused on the role of the {embodied|3} subject, demonstrating that perception is not passive {reception|3} but active {engagement|3}. Phenomenology remains {influential|4} in psychology and {cognitive|3} science.` },
+
+  { id:84, level:"hard", title:"The Microbiome and Health", topic:"Medicine",
+    text:`The human microbiome consists of trillions of microorganisms that inhabit the gut, skin, and other tissues. These microbial communities play an essential role in {digestion|3}, immune function, and even mental {health|3}. Disruptions to the gut microbiome, known as {dysbiosis|3}, have been linked to conditions ranging from {inflammatory|4} bowel disease to depression. Research suggests that diet rich in fiber {promotes|3} a diverse and {beneficial|4} microbial population. Fecal {transplant|4} therapy has shown remarkable {efficacy|3} in treating recurrent infections, opening new {therapeutic|4} avenues that were previously {inconceivable|4}.` },
+
+  { id:85, level:"hard", title:"Electoral Systems Compared", topic:"Political Science",
+    text:`Electoral systems profoundly influence political representation, party structure, and governance outcomes. Proportional representation allocates legislative seats in {proportion|4} to each party's share of the vote, {encouraging|4} multiparty systems and coalition governments. First-past-the-post systems, by contrast, tend to produce two dominant parties and strong single-party {majorities|4}. Mixed systems attempt to combine the {advantages|4} of both approaches. Critics of proportional systems argue that coalition {negotiations|4} lead to {instability|4} and policy {paralysis|4}, while opponents of majoritarian systems {decry|3} the {disenfranchisement|4} of minority voters.` },
+
+  { id:86, level:"hard", title:"Oceanic Thermohaline Circulation", topic:"Geology",
+    text:`The thermohaline circulation is a global system of deep ocean currents driven by differences in water temperature and salinity. In the North Atlantic, cold, dense water sinks to the ocean floor and flows toward the {equator|3}, while warmer surface water moves {poleward|4} to replace it. This conveyor-belt pattern {distributes|4} heat across the globe and strongly influences regional {climates|3}. Climate models suggest that melting polar ice could {dilute|3} the salinity of northern waters, potentially {disrupting|4} this delicate {circulation|4} pattern. Such a disruption could trigger {abrupt|3} and {unpredictable|4} climate shifts.` },
+
+  { id:87, level:"hard", title:"Semiotics and Sign Theory", topic:"Linguistics",
+    text:`Semiotics is the study of signs and symbols and how meaning is created and communicated. Ferdinand de Saussure distinguished between the signifier, the physical form of a sign, and the {signified|4}, the concept it represents. Charles Sanders Peirce expanded the framework by introducing a triadic model that includes the {interpretant|4}, or the meaning generated in the mind of the observer. Semiotics reveals that meaning is not {inherent|3} in objects but is {constructed|4} through cultural {conventions|4}. This insight has been applied to {analyze|3} everything from {advertising|4} imagery to political {rhetoric|4} and literary {narratives|4}.` },
+
+  { id:88, level:"hard", title:"Behavioral Genetics", topic:"Biology",
+    text:`Behavioral genetics investigates the extent to which genetic factors influence personality, intelligence, and mental health. Twin studies have consistently shown that {identical|4} twins raised apart share remarkable behavioral {similarities|4}, suggesting a strong hereditary {component|3}. However, no single gene {determines|4} complex traits like temperament or cognitive ability; rather, thousands of genes interact with {environmental|4} influences in {intricate|3} ways. The field remains {contentious|4} because findings can be {misappropriated|4} to justify discriminatory ideologies. Responsible researchers emphasize that genetic {predisposition|4} is not {destiny|3}.` },
+
+  { id:89, level:"hard", title:"Dark Matter and Dark Energy", topic:"Astronomy",
+    text:`Observations of galactic rotation curves and cosmic expansion have revealed that ordinary matter constitutes only about five percent of the universe's total mass-energy. The remainder is attributed to dark matter and dark {energy|3}, two mysterious {phenomena|4} that have never been directly {detected|3}. Dark matter exerts {gravitational|5} influence on visible structures, holding galaxies together, while dark energy drives the {accelerating|4} expansion of the universe. Despite decades of {meticulous|4} observation, their fundamental {nature|3} remains {enigmatic|4}. Resolving this {conundrum|3} would constitute a {paradigm|4} shift in physics.` },
+
+  { id:90, level:"hard", title:"Sociolinguistic Variation", topic:"Linguistics",
+    text:`Sociolinguistics examines how language varies according to social factors such as class, ethnicity, gender, and geography. William Labov's pioneering studies demonstrated that phonological {variation|3} is not random but follows systematic social {patterns|3}. Speakers often shift between {registers|4} depending on context, using more {prestigious|4} forms in formal settings and vernacular forms among peers. Language attitudes can {reinforce|3} social hierarchies, as certain dialects are stigmatized while others are {valorized|3}. The relationship between language and {identity|3} is {reciprocal|4}: social structures shape speech, and speech in turn {constructs|4} social {reality|3}.` },
+
+  { id:91, level:"hard", title:"Byzantine Empire and Legacy", topic:"History",
+    text:`The Byzantine Empire preserved and transmitted Greco-Roman culture for over a thousand years after the fall of the Western Roman Empire. Its capital, Constantinople, served as a {thriving|4} center of trade, art, and {intellectual|4} life. Byzantine scholars preserved classical texts that would later fuel the Western {Renaissance|4}. The empire's legal code, based on Justinian's {codification|4}, influenced European {jurisprudence|4} for centuries. Byzantine {iconography|4} and architectural innovations, particularly the use of {pendentive|4} domes, remain {conspicuous|4} in Orthodox churches {throughout|4} Eastern Europe.` },
+
+  { id:92, level:"hard", title:"Moral Relativism vs. Universalism", topic:"Philosophy",
+    text:`The debate between moral relativism and universalism has occupied philosophers for centuries. Relativists argue that ethical standards are culturally {contingent|4} and that no single moral framework can claim {universal|3} validity. Universalists counter that certain rights, such as freedom from {torture|3} and arbitrary detention, {transcend|4} cultural boundaries and apply to all human beings. The {proliferation|4} of international human rights law reflects a universalist {tendency|3}, yet enforcement remains {inconsistent|4} across {jurisdictions|4}. Reconciling respect for cultural {diversity|3} with a commitment to fundamental rights remains an {intractable|4} challenge.` },
+
+  { id:93, level:"hard", title:"CRISPR Gene Editing", topic:"Technology",
+    text:`CRISPR-Cas9 has revolutionized molecular biology by providing a precise, efficient, and relatively inexpensive method of editing genetic material. The technology works by guiding a molecular {scissors|3} to a specific location in the genome, where it can cut and {modify|3} DNA sequences with remarkable {accuracy|4}. Applications range from correcting hereditary {disorders|3} to engineering drought-resistant {crops|2}. However, the possibility of editing human {embryos|3} raises profound ethical {concerns|3}, including the specter of {eugenics|3} and unintended {heritable|4} consequences. Regulatory {frameworks|4} vary widely across nations, reflecting divergent cultural {attitudes|4}.` },
+
+  { id:94, level:"hard", title:"The Frankfurt School", topic:"Sociology",
+    text:`The Frankfurt School was a group of critical theorists associated with the Institute for Social Research in early twentieth-century Germany. Thinkers such as Adorno, Horkheimer, and Marcuse combined Marxist analysis with {psychoanalytic|4} theory to critique the cultural {industries|3} of capitalist society. They argued that mass media produces a {homogenized|4} culture that {pacifies|4} the population and {suppresses|4} critical thinking. Habermas later developed the concept of the public {sphere|3} as a space for rational {deliberation|4}, warning that its {erosion|3} threatens democratic {governance|4}. Their ideas remain {pertinent|4} in the age of social media.` },
+
+  { id:95, level:"hard", title:"Bioethics and End-of-Life Care", topic:"Medicine",
+    text:`Bioethics addresses moral questions arising from advances in medicine and biological research. End-of-life care presents particularly {contentious|4} dilemmas, as physicians must balance the {obligation|4} to preserve life with respect for patient {autonomy|3}. The principle of informed consent requires that patients receive {comprehensive|4} information about their prognosis and treatment {options|3}. Euthanasia and physician-assisted dying remain {polarizing|4} issues, with proponents citing compassion and opponents invoking the {sanctity|4} of life. Advance directives allow individuals to {articulate|4} their wishes before {incapacitation|4}, yet interpretation of these documents can be {ambiguous|3}.` },
+
+  { id:96, level:"hard", title:"Monetary Policy and Central Banking", topic:"Economics",
+    text:`Central banks wield enormous influence over national economies through the implementation of monetary policy. By adjusting interest rates, they can either {stimulate|4} borrowing and spending or {constrain|4} inflationary pressures. Quantitative easing, a tool employed during the 2008 financial crisis, involves purchasing government {securities|4} to inject {liquidity|4} into the banking system. Critics argue that such {unconventional|4} measures create asset {bubbles|3} and exacerbate wealth {inequality|3}. The challenge of maintaining price stability while fostering employment growth requires a {judicious|3} balance that remains {perpetually|4} contested among {economists|4}.` },
+
+  { id:97, level:"hard", title:"The Philosophy of Language", topic:"Philosophy",
+    text:`The philosophy of language investigates the nature of meaning, reference, and truth in linguistic communication. Ludwig Wittgenstein famously argued that the meaning of a word is its use in a particular language {game|2}, rejecting the idea that words simply label pre-existing {concepts|3}. Willard Van Orman Quine challenged the {distinction|4} between analytic and synthetic {statements|4}, questioning whether any truth is immune to {empirical|3} revision. Jacques Derrida's {deconstruction|4} further destabilized the notion of fixed meaning, arguing that language is an endless chain of {deferred|3} signification. These debates have {ramifications|4} far beyond linguistics, influencing {epistemology|4} and {jurisprudence|4}.` },
+
+  { id:98, level:"hard", title:"Astrobiology and Extremophiles", topic:"Biology",
+    text:`Astrobiology is the interdisciplinary study of life's origins, evolution, and potential distribution beyond Earth. The discovery of extremophiles, organisms that thrive in conditions once deemed {inhospitable|4}, has dramatically expanded our understanding of habitable {environments|4}. Microbes found in deep-sea {hydrothermal|4} vents, acidic hot springs, and Antarctic ice sheets suggest that life could {potentially|4} exist beneath the frozen surfaces of moons like Europa and {Enceladus|3}. The detection of organic {molecules|4} on Mars has further fueled {speculation|4}. However, distinguishing genuine {biosignatures|3} from abiotic chemistry remains an {formidable|4} analytical {challenge|4}.` },
+
+  { id:99, level:"hard", title:"Structural Inequality in Education", topic:"Education",
+    text:`Structural inequality in education refers to the systemic disparities that limit opportunities for marginalized groups. Funding models tied to local property taxes {perpetuate|4} resource gaps between {affluent|3} and low-income school districts. Standardized testing, though intended to measure {aptitude|3} objectively, often reflects socioeconomic {advantages|4} rather than innate ability. Implicit biases among educators can lead to {disproportionate|4} disciplinary action against minority students. Addressing these {entrenched|3} inequities requires comprehensive policy reform, including equitable funding {formulas|4}, culturally responsive {pedagogy|4}, and sustained community {engagement|4}. Progress remains {incremental|4} and politically {contentious|4}.` },
+
+  { id:100, level:"hard", title:"Consciousness and the Hard Problem", topic:"Philosophy",
+    text:`The so-called hard problem of consciousness asks why and how physical processes in the brain give rise to subjective experience. David Chalmers distinguished this from easy problems, which concern the {mechanisms|4} of perception and cognition. Physicalists argue that consciousness will {ultimately|3} be explained by neuroscience once brain {processes|3} are fully mapped. Dualists {maintain|3} that subjective experience possesses {irreducible|4} qualities that cannot be captured by physical {descriptions|4} alone. Panpsychists propose that {consciousness|4} is a fundamental feature of all matter, a view once {dismissed|3} as {whimsical|4} but now receiving serious philosophical {attention|4}.` }
+];
+
+/* ============================================================
+   STATE
+   ============================================================ */
+let state = {
+  currentPassageId: null,
+  blanks: [],
+  results: [],       // per-passage records for session report
+  sessionStart: null,
+  timerInterval: null,
+  timeLeft: 60,
+  submitted: false,
+  filterLevel: "all",
+  searchQuery: ""
+};
+
+/* ============================================================
+   HOME SCREEN
+   ============================================================ */
+function renderHome() {
+  const grid = document.getElementById("passageGrid");
+  grid.innerHTML = "";
+  const q = state.searchQuery.toLowerCase();
+  const filtered = PASSAGES.filter(p => {
+    if (state.filterLevel !== "all" && p.level !== state.filterLevel) return false;
+    if (q && !p.title.toLowerCase().includes(q) && !p.topic.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  document.getElementById("passageCount").textContent = filtered.length + " passage" + (filtered.length !== 1 ? "s" : "");
+  filtered.forEach(p => {
+    const card = document.createElement("div");
+    card.className = "passage-card";
+    card.onclick = () => startPassage(p.id);
+    // Check if already completed
+    const done = state.results.find(r => r.id === p.id);
+    card.innerHTML = `
+      <div class="card-num">#${p.id}${done ? ' &mdash; <span style="color:#28a745">completed (' + done.correct + '/' + done.total + ')</span>' : ''}</div>
+      <h3>${p.title}</h3>
+      <div class="card-meta">
+        <span class="badge ${p.level}">${p.level.toUpperCase()}</span>
+        <span class="topic-tag">${p.topic}</span>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function setFilter(level, btn) {
+  state.filterLevel = level;
+  document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+  btn.classList.add("active");
+  renderHome();
+}
+
+document.getElementById("searchInput").addEventListener("input", function() {
+  state.searchQuery = this.value;
+  renderHome();
+});
+
+/* ============================================================
+   START PASSAGE
+   ============================================================ */
+function startPassage(id) {
+  const passage = PASSAGES.find(p => p.id === id);
+  if (!passage) return;
+  state.currentPassageId = id;
+  state.submitted = false;
+  state.timeLeft = 60;
+  if (!state.sessionStart) state.sessionStart = Date.now();
+
+  document.getElementById("homeScreen").style.display = "none";
+  document.getElementById("practiceScreen").style.display = "block";
+  document.getElementById("reportScreen").style.display = "none";
+  document.getElementById("headerMeta").style.display = "flex";
+  document.getElementById("resultArea").innerHTML = "";
+
+  document.getElementById("pnum").textContent = id;
+  document.getElementById("score").textContent = state.results.reduce((s, r) => s + r.correct, 0);
+
+  const badge = document.getElementById("diffBadge");
+  badge.className = "difficulty-badge " + passage.level;
+  badge.textContent = passage.level.toUpperCase();
+
+  document.getElementById("hint").textContent = "Topic: " + passage.topic;
+  document.getElementById("submitBtn").textContent = "Submit";
+  document.getElementById("submitBtn").onclick = submitPassage;
+  document.getElementById("submitBtn").className = "";
+  document.getElementById("actionBtns").innerHTML = '<button id="submitBtn" onclick="submitPassage()">Submit</button>';
+
+  renderPassageText(passage);
+  startTimer();
+}
+
+/* ============================================================
+   RENDER PASSAGE TEXT
+   ============================================================ */
+function renderPassageText(passage) {
+  state.blanks = [];
+  const container = document.getElementById("passage");
+  container.innerHTML = "";
+
+  const parts = passage.text.split(/(\{[^}]+\})/g);
+  let blankIdx = 0;
+  parts.forEach(part => {
+    const m = part.match(/^\{([^|]+)\|(\d+)\}$/);
+    if (m) {
+      const word = m[1];
+      const prefixLen = parseInt(m[2], 10);
+      const prefix = word.slice(0, prefixLen);
+      const rest = word.slice(prefixLen);
+
+      const span = document.createElement("span");
+      const pre = document.createElement("span");
+      pre.className = "prefix";
+      pre.textContent = prefix;
+      span.appendChild(pre);
+
+      const input = document.createElement("input");
+      input.type = "text";
+      input.autocomplete = "off";
+      input.spellcheck = false;
+      input.size = rest.length;
+      input.style.width = (rest.length * 1.1) + "ch";
+      input.maxLength = rest.length + 2; // small grace
+      input.dataset.answer = rest;
+      input.dataset.full = word;
+      input.dataset.idx = blankIdx;
+      input.setAttribute("tabindex", blankIdx + 1);
+      span.appendChild(input);
+
+      container.appendChild(span);
+      state.blanks.push({ word, prefix, rest, input });
+      blankIdx++;
+    } else {
+      container.appendChild(document.createTextNode(part));
+    }
+  });
+
+  // Tab navigation between blanks
+  state.blanks.forEach((b, i) => {
+    b.input.addEventListener("keydown", function(e) {
+      if (e.key === "Tab" && !e.shiftKey) {
+        e.preventDefault();
+        if (i + 1 < state.blanks.length) state.blanks[i + 1].input.focus();
+      } else if (e.key === "Tab" && e.shiftKey) {
+        e.preventDefault();
+        if (i - 1 >= 0) state.blanks[i - 1].input.focus();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        submitPassage();
+      }
+    });
+    // Auto-advance when blank is filled
+    b.input.addEventListener("input", function() {
+      if (this.value.length >= b.rest.length && i + 1 < state.blanks.length) {
+        state.blanks[i + 1].input.focus();
+      }
+    });
+  });
+
+  if (state.blanks[0]) state.blanks[0].input.focus();
+}
+
+/* ============================================================
+   TIMER (60-second countdown)
+   ============================================================ */
+function startTimer() {
+  clearInterval(state.timerInterval);
+  state.timeLeft = 60;
+  updateTimerDisplay();
+  state.timerInterval = setInterval(() => {
+    state.timeLeft--;
+    updateTimerDisplay();
+    if (state.timeLeft <= 0) {
+      clearInterval(state.timerInterval);
+      if (!state.submitted) submitPassage();
+    }
+  }, 1000);
+}
+
+function updateTimerDisplay() {
+  const el = document.getElementById("timer");
+  const m = Math.floor(Math.max(0, state.timeLeft) / 60);
+  const s = Math.max(0, state.timeLeft) % 60;
+  el.textContent = String(m).padStart(2, "0") + ":" + String(s).padStart(2, "0");
+  el.className = "";
+  if (state.timeLeft <= 5) el.className = "danger";
+  else if (state.timeLeft <= 15) el.className = "warning";
+}
+
+/* ============================================================
+   SUBMIT / GRADE
+   ============================================================ */
+function submitPassage() {
+  if (state.submitted) return;
+  state.submitted = true;
+  clearInterval(state.timerInterval);
+
+  const passage = PASSAGES.find(p => p.id === state.currentPassageId);
+  let correct = 0;
+  const detail = [];
+
+  state.blanks.forEach(b => {
+    const user = (b.input.value || "").trim().toLowerCase();
+    const answer = b.rest.toLowerCase();
+    const ok = user === answer;
+    if (ok) correct++;
+
+    b.input.disabled = true;
+    if (ok) {
+      b.input.classList.add("correct-input");
+    } else {
+      b.input.classList.add("incorrect-input");
+      // Show correct answer next to it
+      const corr = document.createElement("span");
+      corr.className = "correction";
+      corr.textContent = " " + b.rest;
+      b.input.parentNode.appendChild(corr);
+    }
+
+    detail.push({
+      full: b.word,
+      prefix: b.prefix,
+      expected: b.rest,
+      got: b.input.value || "",
+      correct: ok
+    });
+  });
+
+  state.results.push({
+    id: passage.id,
+    title: passage.title,
+    level: passage.level,
+    topic: passage.topic,
+    correct,
+    total: state.blanks.length,
+    detail,
+    timeUsed: 60 - Math.max(0, state.timeLeft)
+  });
+
+  document.getElementById("score").textContent = state.results.reduce((s, r) => s + r.correct, 0);
+
+  // Show result summary
+  const pct = Math.round(correct / state.blanks.length * 100);
+  const cls = pct >= 80 ? "good" : pct >= 50 ? "ok" : "bad";
+  const area = document.getElementById("resultArea");
+  area.innerHTML = `
+    <div class="result-summary ${cls}">
+      <b>${correct}/${state.blanks.length} correct (${pct}%)</b> &mdash; Time used: ${60 - Math.max(0, state.timeLeft)}s
+    </div>`;
+
+  // Replace action buttons
+  document.getElementById("actionBtns").innerHTML = `
+    <button class="secondary" onclick="goHome()">Back to Menu</button>
+    ${state.results.length >= 2 ? '<button class="secondary" onclick="showReport()" style="background:#6f42c1">Session Report</button>' : ''}
+    <button class="success" onclick="nextPassageAuto()">Next Passage</button>`;
+}
+
+function nextPassageAuto() {
+  // Pick next passage that hasn't been done
+  const doneIds = new Set(state.results.map(r => r.id));
+  const lastResult = state.results[state.results.length - 1];
+  const acc = lastResult ? lastResult.correct / lastResult.total : 0.5;
+
+  // Adaptive: pick same or harder/easier level
+  let targetLevel = lastResult ? lastResult.level : "easy";
+  if (acc >= 0.8) targetLevel = targetLevel === "easy" ? "medium" : "hard";
+  else if (acc < 0.4) targetLevel = targetLevel === "hard" ? "medium" : "easy";
+
+  let pool = PASSAGES.filter(p => p.level === targetLevel && !doneIds.has(p.id));
+  if (!pool.length) pool = PASSAGES.filter(p => !doneIds.has(p.id));
+  if (!pool.length) { showReport(); return; }
+
+  const pick = pool[Math.floor(Math.random() * pool.length)];
+  startPassage(pick.id);
+}
+
+/* ============================================================
+   EXIT / CONFIRM
+   ============================================================ */
+function confirmExit() {
+  if (state.submitted) { goHome(); return; }
+  document.getElementById("exitModal").classList.add("show");
+}
+
+function closeModal() {
+  document.getElementById("exitModal").classList.remove("show");
+}
+
+function doExit() {
+  closeModal();
+  clearInterval(state.timerInterval);
+  goHome();
+}
+
+function goHome() {
+  clearInterval(state.timerInterval);
+  document.getElementById("practiceScreen").style.display = "none";
+  document.getElementById("reportScreen").style.display = "none";
+  document.getElementById("homeScreen").style.display = "block";
+  document.getElementById("headerMeta").style.display = "none";
+  document.getElementById("timer").className = "";
+  renderHome();
+}
+
+/* ============================================================
+   HOME LINK INTERCEPTION
+   ============================================================ */
+document.getElementById("homeLink").addEventListener("click", function(e) {
+  // If mid-passage and not submitted, confirm first
+  if (document.getElementById("practiceScreen").style.display === "block" && !state.submitted) {
+    e.preventDefault();
+    confirmExit();
+  }
+});
+
+/* ============================================================
+   SESSION REPORT
+   ============================================================ */
+function showReport() {
+  clearInterval(state.timerInterval);
+  document.getElementById("practiceScreen").style.display = "none";
+  document.getElementById("homeScreen").style.display = "none";
+  document.getElementById("reportScreen").style.display = "block";
+  document.getElementById("headerMeta").style.display = "none";
+
+  const totalCorrect = state.results.reduce((s, x) => s + x.correct, 0);
+  const totalBlanks = state.results.reduce((s, x) => s + x.total, 0);
+  const pct = totalBlanks ? Math.round(totalCorrect / totalBlanks * 100) : 0;
+  const totalTime = state.results.reduce((s, x) => s + (x.timeUsed || 0), 0);
+
+  document.getElementById("finalScore").textContent = pct + "%";
+  document.getElementById("rTime").textContent = formatTimeSec(totalTime);
+  document.getElementById("rPass").textContent = state.results.length;
+  document.getElementById("rCorrect").textContent = totalCorrect + " / " + totalBlanks;
+  document.getElementById("rAvg").textContent = state.results.length ? (totalCorrect / state.results.length).toFixed(1) : "0";
+
+  const list = document.getElementById("reviewList");
+  list.innerHTML = "";
+  state.results.forEach((res, i) => {
+    const div = document.createElement("div");
+    div.className = "review-item " + (res.correct === res.total ? "correct" : "incorrect");
+    let html = `<b>Passage #${res.id}: ${res.title}</b>
+      <span class="difficulty-badge ${res.level}" style="font-size:11px">${res.level.toUpperCase()}</span>
+      <span class="topic-tag" style="margin-left:6px">${res.topic}</span>
+      &mdash; ${res.correct}/${res.total} correct (${res.timeUsed}s)
+      <br><div style="margin-top:6px">`;
+    res.detail.forEach(d => {
+      if (d.correct) {
+        html += `<span class="correct-word">${d.full}</span> &nbsp; `;
+      } else {
+        html += `<span>${d.prefix}<span class="incorrect-word">${d.got || "&empty;"}</span> &rarr; <span class="correct-word">${d.full}</span></span> &nbsp; `;
+      }
+    });
+    html += "</div>";
+    div.innerHTML = html;
+    list.appendChild(div);
+  });
+}
+
+function formatTimeSec(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return String(m).padStart(2, "0") + ":" + String(sec).padStart(2, "0");
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+renderHome();
+</script>
+</body>
+</html>

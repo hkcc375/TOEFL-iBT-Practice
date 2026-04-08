@@ -724,9 +724,7 @@ function startPassage(id) {
   badge.textContent = passage.level.toUpperCase();
 
   document.getElementById("hint").textContent = "Topic: " + passage.topic;
-  document.getElementById("submitBtn").textContent = "Submit";
-  document.getElementById("submitBtn").onclick = submitPassage;
-  document.getElementById("submitBtn").className = "";
+  // Recreate the submit button first (previous submission replaces actionBtns contents)
   document.getElementById("actionBtns").innerHTML = '<button id="submitBtn" onclick="submitPassage()">Submit</button>';
 
   renderPassageText(passage);

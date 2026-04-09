@@ -658,6 +658,33 @@ let state = {
 };
 
 /* ============================================================
+   BEST SCORES (persisted in localStorage)
+   ============================================================ */
+const BEST_SCORES_KEY = "toefl_ctw_best_scores";
+
+function getBestScores() {
+  try { return JSON.parse(localStorage.getItem(BEST_SCORES_KEY) || "{}"); }
+  catch { return {}; }
+}
+
+function saveBestScore(passageId, correct, total, timeUsed) {
+  const scores = getBestScores();
+  const pct = total ? Math.round(correct / total * 100) : 0;
+  const prev = scores[passageId];
+  // Update if no previous score, or new score is better (higher %), or same % but faster
+  if (!prev || pct > prev.pct || (pct === prev.pct && timeUsed < prev.timeUsed)) {
+    scores[passageId] = { correct, total, pct, timeUsed, date: new Date().toISOString() };
+    localStorage.setItem(BEST_SCORES_KEY, JSON.stringify(scores));
+    return { isNewBest: true, prevPct: prev ? prev.pct : null };
+  }
+  return { isNewBest: false, prevPct: prev.pct };
+}
+
+function getBestScore(passageId) {
+  return getBestScores()[passageId] || null;
+}
+
+/* ============================================================
    HOME SCREEN
    ============================================================ */
 function renderHome() {
@@ -674,10 +701,19 @@ function renderHome() {
     const card = document.createElement("div");
     card.className = "passage-card";
     card.onclick = () => startPassage(p.id);
-    // Check if already completed
+    // Check best score from localStorage
+    const best = getBestScore(p.id);
+    // Check if completed this session
     const done = state.results.find(r => r.id === p.id);
+    let statusHtml = '';
+    if (best) {
+      const starColor = best.pct >= 80 ? '#28a745' : best.pct >= 50 ? '#856404' : '#dc3545';
+      statusHtml = ` &mdash; <span style="color:${starColor};font-weight:700">Best: ${best.correct}/${best.total} (${best.pct}%)</span>`;
+    } else if (done) {
+      statusHtml = ` &mdash; <span style="color:#28a745">completed</span>`;
+    }
     card.innerHTML = `
-      <div class="card-num">#${p.id}${done ? ' &mdash; <span style="color:#28a745">completed (' + done.correct + '/' + done.total + ')</span>' : ''}</div>
+      <div class="card-num">#${p.id}${statusHtml}</div>
       <h3>${p.title}</h3>
       <div class="card-meta">
         <span class="badge ${p.level}">${p.level.toUpperCase()}</span>
@@ -880,13 +916,26 @@ function submitPassage() {
 
   document.getElementById("score").textContent = state.results.reduce((s, r) => s + r.correct, 0);
 
-  // Show result summary
+  // Save best score to localStorage
+  const timeUsed = 60 - Math.max(0, state.timeLeft);
   const pct = Math.round(correct / state.blanks.length * 100);
+  const bestResult = saveBestScore(passage.id, correct, state.blanks.length, timeUsed);
+
+  // Show result summary with best score info
   const cls = pct >= 80 ? "good" : pct >= 50 ? "ok" : "bad";
+  let bestHtml = '';
+  if (bestResult.isNewBest && bestResult.prevPct !== null) {
+    bestHtml = `<div style="margin-top:6px;font-size:14px;color:#28a745;font-weight:600">&#9733; New personal best! (Previous: ${bestResult.prevPct}%)</div>`;
+  } else if (bestResult.isNewBest) {
+    bestHtml = `<div style="margin-top:6px;font-size:14px;color:#28a745;font-weight:600">&#9733; Score saved as your personal best!</div>`;
+  } else {
+    bestHtml = `<div style="margin-top:6px;font-size:13px;color:#666">Your best: ${bestResult.prevPct}%</div>`;
+  }
   const area = document.getElementById("resultArea");
   area.innerHTML = `
     <div class="result-summary ${cls}">
-      <b>${correct}/${state.blanks.length} correct (${pct}%)</b> &mdash; Time used: ${60 - Math.max(0, state.timeLeft)}s
+      <b>${correct}/${state.blanks.length} correct (${pct}%)</b> &mdash; Time used: ${timeUsed}s
+      ${bestHtml}
     </div>`;
 
   // Replace action buttons

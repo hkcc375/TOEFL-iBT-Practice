@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listen & Answer — TOEFL iBT 2026 Practice</title>
+<style>
+  :root {
+    --primary:#2563eb; --primary-dark:#1d4ed8;
+    --success:#16a34a; --danger:#dc2626; --warn:#f59e0b;
+    --orange:#f97316; --bg:#f8fafc; --card:#ffffff;
+    --text:#0f172a; --text-sec:#64748b; --border:#e2e8f0;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;padding:20px;min-height:100vh}
+  .container{max-width:980px;margin:0 auto}
+  header{background:linear-gradient(135deg,#1e40af,#7c3aed);color:#fff;padding:28px 32px;border-radius:14px;margin-bottom:24px;box-shadow:0 4px 12px rgba(30,64,175,0.18)}
+  header h1{font-size:26px;margin-bottom:6px}
+  header p{opacity:0.9;font-size:14px}
+  header a.back{color:#fff;text-decoration:none;opacity:0.8;font-size:13px;margin-bottom:8px;display:inline-block}
+  header a.back:hover{opacity:1}
+  .card{background:var(--card);border-radius:12px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.06);border:1px solid var(--border);margin-bottom:18px}
+
+  /* Home — passage list */
+  .filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+  .filters input,.filters select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit}
+  .filters input{flex:1;min-width:180px}
+  .passage-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:14px}
+  .p-card{background:#fff;border:1px solid var(--border);border-radius:10px;padding:16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:6px}
+  .p-card:hover{transform:translateY(-2px);border-color:var(--primary);box-shadow:0 6px 14px rgba(37,99,235,0.1)}
+  .p-card .top{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+  .p-type{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:3px 8px;border-radius:10px}
+  .p-type.lecture{background:#ede9fe;color:#6d28d9}
+  .p-type.conversation{background:#dcfce7;color:#15803d}
+  .p-card h3{font-size:15px;color:var(--text);font-weight:600}
+  .p-card .topic{font-size:12px;color:var(--text-sec)}
+  .p-card .meta{font-size:11px;color:var(--text-sec);display:flex;justify-content:space-between;margin-top:4px}
+  .p-card .best{font-size:12px;font-weight:700}
+
+  /* Get-ready & listening screens */
+  .stage{text-align:center;padding:36px 24px}
+  .stage h2{font-size:24px;margin-bottom:8px}
+  .stage p.lead{color:var(--text-sec);margin-bottom:20px;font-size:14px}
+  .audio-circle{width:140px;height:140px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;margin:20px auto;color:#fff;font-size:54px;box-shadow:0 8px 22px rgba(37,99,235,0.3);position:relative}
+  .audio-circle.playing{animation:pulse 1.4s ease-in-out infinite}
+  @keyframes pulse {0%,100%{transform:scale(1);box-shadow:0 8px 22px rgba(37,99,235,0.3)}50%{transform:scale(1.06);box-shadow:0 8px 30px rgba(37,99,235,0.5)}}
+  .progress-bar{width:100%;max-width:380px;height:6px;background:var(--border);border-radius:3px;margin:14px auto;overflow:hidden}
+  .progress-bar .fill{height:100%;background:linear-gradient(90deg,#2563eb,#7c3aed);width:0%;transition:width .3s linear}
+
+  /* Buttons */
+  button{font-family:inherit;cursor:pointer;border:none;padding:11px 22px;border-radius:8px;font-size:14px;font-weight:600;transition:all .15s}
+  button:disabled{opacity:0.5;cursor:not-allowed}
+  .btn-primary{background:var(--primary);color:#fff}
+  .btn-primary:hover:not(:disabled){background:var(--primary-dark)}
+  .btn-success{background:var(--success);color:#fff}
+  .btn-ghost{background:#f1f5f9;color:var(--text)}
+  .btn-ghost:hover:not(:disabled){background:#e2e8f0}
+  .btn-row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:20px}
+
+  /* Question UI */
+  .q-progress{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;font-size:13px;color:var(--text-sec)}
+  .q-progress .bar{flex:1;height:4px;background:var(--border);border-radius:2px;margin:0 12px;overflow:hidden}
+  .q-progress .bar .fill{height:100%;background:var(--primary);transition:width .3s}
+  .question{font-size:16px;font-weight:600;margin-bottom:14px;line-height:1.45}
+  .q-type-badge{display:inline-block;font-size:11px;font-weight:700;text-transform:uppercase;color:var(--primary);background:#dbeafe;padding:2px 8px;border-radius:8px;margin-bottom:10px;letter-spacing:0.4px}
+  .options{display:flex;flex-direction:column;gap:10px}
+  .opt{padding:14px 16px;border:2px solid var(--border);border-radius:10px;cursor:pointer;background:#fff;display:flex;gap:12px;align-items:flex-start;transition:all .12s}
+  .opt:hover{border-color:#94a3b8;background:#f8fafc}
+  .opt.selected{border-color:var(--primary);background:#eff6ff}
+  .opt.correct{border-color:var(--success);background:#dcfce7}
+  .opt.incorrect{border-color:var(--danger);background:#fee2e2}
+  .opt-letter{font-weight:700;color:var(--text-sec);min-width:22px;flex-shrink:0}
+  .opt.selected .opt-letter,.opt.correct .opt-letter,.opt.incorrect .opt-letter{color:var(--primary)}
+  .opt.correct .opt-letter{color:var(--success)}
+  .opt.incorrect .opt-letter{color:var(--danger)}
+  .opt-text{flex:1;font-size:14px;line-height:1.4}
+  .explanation{margin-top:14px;padding:12px 14px;background:#fffbeb;border-left:3px solid var(--warn);border-radius:6px;font-size:13px;color:#78350f;line-height:1.5;display:none}
+  .explanation.show{display:block}
+
+  /* Results */
+  .result-summary{text-align:center;padding:20px}
+  .score-big{font-size:56px;font-weight:700;color:var(--primary);margin:8px 0}
+  .score-big.good{color:var(--success)}
+  .score-big.fair{color:var(--warn)}
+  .score-big.poor{color:var(--danger)}
+  .best-banner{padding:10px 14px;border-radius:8px;margin:12px auto;max-width:380px;font-size:13px;font-weight:600;background:#fef3c7;color:#78350f}
+  .best-banner.new{background:#dcfce7;color:#15803d}
+  .review-list{margin-top:16px}
+  .review-item{padding:12px 14px;border-radius:8px;margin-bottom:8px;border:1px solid var(--border);font-size:13px}
+  .review-item.correct{background:#f0fdf4;border-color:#86efac}
+  .review-item.incorrect{background:#fef2f2;border-color:#fca5a5}
+  .review-item .qline{font-weight:600;margin-bottom:4px}
+  .review-item .ans{color:var(--text-sec);margin:2px 0}
+  .review-item .why{margin-top:6px;font-size:12px;color:#78350f;background:#fffbeb;padding:6px 10px;border-radius:4px;border-left:2px solid var(--warn)}
+
+  /* Transcript reveal */
+  .transcript-toggle{margin:16px 0;text-align:center}
+  .transcript-box{background:#f8fafc;border:1px solid var(--border);border-radius:8px;padding:14px;font-size:13px;line-height:1.7;color:var(--text);max-height:300px;overflow-y:auto;display:none}
+  .transcript-box.show{display:block}
+  .transcript-box .speaker{font-weight:700;color:var(--primary)}
+
+  /* Hidden by default */
+  .screen{display:none}
+  .screen.active{display:block}
+
+  @media (max-width:640px){
+    body{padding:10px}
+    header{padding:20px}
+    header h1{font-size:20px}
+    .card{padding:16px}
+    .passage-grid{grid-template-columns:1fr}
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <a href="index.html" class="back">← Back to all sections</a>
+  <h1>🎧 Listen &amp; Answer Questions</h1>
+  <p>TOEFL iBT 2026 Listening — hear an academic lecture or campus conversation, then answer 5 comprehension questions.</p>
+</header>
+
+<!-- HOME SCREEN -->
+<div class="screen active" id="screenHome">
+  <div class="card">
+    <div class="filters">
+      <input type="text" id="search" placeholder="Search by title or topic…">
+      <select id="typeFilter">
+        <option value="">All types</option>
+        <option value="lecture">Lectures</option>
+        <option value="conversation">Conversations</option>
+      </select>
+      <select id="topicFilter">
+        <option value="">All topics</option>
+      </select>
+    </div>
+    <div id="passageGrid" class="passage-grid"></div>
+    <div id="emptyHint" style="text-align:center;color:var(--text-sec);padding:30px;display:none">No passages match those filters.</div>
+  </div>
+</div>
+
+<!-- INTRO / GET READY -->
+<div class="screen" id="screenIntro">
+  <div class="card stage">
+    <span class="q-type-badge" id="introType">LECTURE</span>
+    <h2 id="introTitle"></h2>
+    <p class="lead" id="introTopic"></p>
+    <p style="font-size:14px;color:var(--text-sec);max-width:520px;margin:14px auto">
+      You will hear the audio <strong>once</strong>. Listen carefully — you may take notes on paper but the transcript will not be shown until after you answer all 5 questions.
+    </p>
+    <div class="audio-circle">🎧</div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="goHome()">Cancel</button>
+      <button class="btn-primary" onclick="startListening()">Start Listening</button>
+    </div>
+  </div>
+</div>
+
+<!-- LISTENING -->
+<div class="screen" id="screenListen">
+  <div class="card stage">
+    <span class="q-type-badge" id="listenType">LECTURE</span>
+    <h2 id="listenTitle"></h2>
+    <p class="lead">Listening… focus and take notes.</p>
+    <div class="audio-circle playing">🔊</div>
+    <div class="progress-bar"><div class="fill" id="audioFill"></div></div>
+    <p style="font-size:12px;color:var(--text-sec);margin-top:8px"><span id="audioElapsed">0:00</span> / <span id="audioTotal">0:00</span></p>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="abortListening()">Stop &amp; Exit</button>
+    </div>
+  </div>
+</div>
+
+<!-- QUESTIONS -->
+<div class="screen" id="screenQuestion">
+  <div class="card">
+    <div class="q-progress">
+      <span>Question <strong id="qNum">1</strong> of <strong id="qTotal">5</strong></span>
+      <div class="bar"><div class="fill" id="qFill"></div></div>
+      <span id="qPassageTitle" style="font-weight:600;color:var(--text);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+    </div>
+    <div class="q-type-badge" id="qTypeBadge">Main Idea</div>
+    <div class="question" id="questionText"></div>
+    <div class="options" id="optionsBox"></div>
+    <div class="explanation" id="explanationBox"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="abortListening()">Quit</button>
+      <button class="btn-primary" id="btnNext" onclick="nextQuestion()" disabled>Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- RESULTS -->
+<div class="screen" id="screenResult">
+  <div class="card result-summary">
+    <p class="lead" id="resultTitle"></p>
+    <div class="score-big" id="resultScore">0/5</div>
+    <p style="color:var(--text-sec);font-size:14px" id="resultPct"></p>
+    <div class="best-banner" id="bestBanner"></div>
+    <div class="transcript-toggle">
+      <button class="btn-ghost" id="transcriptBtn" onclick="toggleTranscript()">Show transcript</button>
+    </div>
+    <div class="transcript-box" id="transcriptBox"></div>
+    <div class="review-list" id="reviewList"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="goHome()">Back to passages</button>
+      <button class="btn-primary" onclick="retryPassage()">Try this again</button>
+      <button class="btn-success" onclick="nextPassage()">Next passage →</button>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+/* =============================================================
+   PASSAGES
+   ============================================================= */
+const PASSAGES = [
+
+  { id:1, type:"conversation", topic:"Daily Life", title:"Office Hours: Choosing a Thesis",
+    transcript:[
+      {sp:"Student", text:"Professor Liu, do you have a minute? I wanted to talk about my senior thesis topic."},
+      {sp:"Professor", text:"Of course, come in. You mentioned environmental sociology last week — have you narrowed it down?"},
+      {sp:"Student", text:"Sort of. I'm interested in why some communities adopt recycling programs quickly while others resist them, even when the city offers the same incentives."},
+      {sp:"Professor", text:"That's a rich question. But you'll need a focused angle. Are you thinking comparative case study, or survey data?"},
+      {sp:"Student", text:"I was hoping to do interviews. Maybe two neighborhoods in the city — one with high participation, one with low."},
+      {sp:"Professor", text:"Interviews are valuable, but they're slow. For a senior thesis, ten to fifteen interviews per neighborhood is realistic. Less than that and your conclusions will look thin."},
+      {sp:"Student", text:"How do I get people to talk to me, though? Cold-knocking on doors sounds nightmarish."},
+      {sp:"Professor", text:"Recruit through community organizations — neighborhood associations, churches, the local library. A trusted introduction doubles your response rate."},
+      {sp:"Student", text:"That makes sense. I was also worried about the IRB process. I've never submitted a protocol before."},
+      {sp:"Professor", text:"Start that paperwork now. The board meets monthly, and approval can take six weeks. If you wait until October, your fieldwork window collapses."},
+      {sp:"Student", text:"Six weeks? I had no idea. Okay, I'll draft something this weekend and send it your way."},
+      {sp:"Professor", text:"Good. Bring me your interview questions too — those need to be approved as part of the protocol."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What is the main purpose of the conversation?",
+        options:["To resign from a research project","To discuss the planning of the student's thesis","To complain about a difficult professor","To request an extension on an assignment"],
+        correct:1, why:"The student opens by saying he wants to talk about his senior thesis, and the rest of the conversation revolves around method, recruitment, and IRB timing." },
+      { type:"detail", q:"How many interviews per neighborhood does the professor consider realistic?",
+        options:["Five to ten","Ten to fifteen","Fifteen to twenty","Twenty to thirty"],
+        correct:1, why:"The professor explicitly says \"ten to fifteen interviews per neighborhood is realistic.\"" },
+      { type:"function", q:"Why does the professor recommend going through community organizations?",
+        options:["They will fund the research","They guarantee unbiased participants","A trusted introduction improves the response rate","They handle the IRB submission"],
+        correct:2, why:"The professor explains that a trusted introduction doubles the response rate, which is why recruiting through community organizations works better than cold knocking." },
+      { type:"inference", q:"What does the professor imply about waiting until October to start IRB paperwork?",
+        options:["The fieldwork could not be completed in time","The board would reject the protocol","The student would need a co-advisor","Funding would no longer be available"],
+        correct:0, why:"The professor warns that approval takes about six weeks and \"your fieldwork window collapses\" if the student waits until October — implying the project couldn't finish on schedule." },
+      { type:"attitude", q:"What is the student's attitude toward the IRB process at the start of the conversation?",
+        options:["Confident and prepared","Dismissive of its importance","Anxious and inexperienced","Indifferent"],
+        correct:2, why:"The student says he has never submitted a protocol before and was \"worried about the IRB process,\" indicating anxiety driven by inexperience." }
+    ]
+  },
+
+  { id:2, type:"lecture", topic:"Biology", title:"How Octopuses Think",
+    transcript:[
+      {sp:"Professor", text:"Today we'll talk about cognition in cephalopods, particularly the octopus — an animal so unlike us that some philosophers call meeting one the closest experience we'll have to encountering an alien intelligence."},
+      {sp:"Professor", text:"First, the architecture. An octopus has roughly five hundred million neurons, comparable to a dog. But here's the strange part: only about a third of those neurons are in the central brain. The other two-thirds are distributed throughout the eight arms."},
+      {sp:"Professor", text:"This means each arm has substantial autonomy. If you sever an arm — which I would not recommend — it can continue to grasp objects and even respond to chemical stimuli for some time. The arm is, in a real sense, locally intelligent."},
+      {sp:"Professor", text:"Researchers at the University of Naples designed experiments where octopuses had to solve mazes by reaching through openings. They found the octopus does not seem to know, in the conscious central sense, exactly where its arms are. Instead, the central brain issues general commands — 'reach for that' — and each arm figures out the path on its own."},
+      {sp:"Professor", text:"This decentralization has consequences for how we measure intelligence. Standard tests assume a single decision-maker. But what if cognition is distributed? Some octopuses can open childproof jars to retrieve food — a famous example. Others have been observed using coconut shells as portable shelters, which is one of the few documented cases of tool use in invertebrates."},
+      {sp:"Professor", text:"There's a deeper puzzle, though. Octopuses are short-lived — most species live only one to two years. They are also largely solitary. Cognition usually evolves in long-lived, social animals, because complex thinking pays off when you have time and a community to apply it. So why are octopuses so smart? One leading hypothesis is that their intelligence is a response to predation. They have soft bodies, no shell, and a lot of predators. Cleverness is their armor."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What is the lecture mainly about?",
+        options:["The reproductive cycle of octopuses","The unusual nature of octopus cognition","Recent debates about animal welfare","Why cephalopods are endangered"],
+        correct:1, why:"The professor's focus is on how octopus cognition is structured, why it is unusual, and why it might have evolved." },
+      { type:"detail", q:"Approximately what fraction of an octopus's neurons are located in its central brain?",
+        options:["About one-tenth","About one-third","About one-half","Nearly all of them"],
+        correct:1, why:"The professor says \"only about a third of those neurons are in the central brain.\"" },
+      { type:"function", q:"Why does the professor mention coconut shells?",
+        options:["To explain what octopuses eat","To give an example of tool use in an invertebrate","To compare octopuses to crabs","To describe a defensive behavior against predators"],
+        correct:1, why:"The professor cites coconut-shell shelters as \"one of the few documented cases of tool use in invertebrates.\"" },
+      { type:"inference", q:"What can be inferred about how each octopus arm operates?",
+        options:["It is fully controlled by the central brain at all times","It has significant local autonomy in carrying out commands","It cannot function without sensory input from the eyes","It develops independently from the rest of the body"],
+        correct:1, why:"The professor describes the arms as \"locally intelligent\" and says each arm figures out the path itself given a general command, implying significant autonomy." },
+      { type:"organization", q:"How does the professor end the lecture?",
+        options:["By summarizing previous research methods","By posing an evolutionary puzzle and offering a hypothesis","By asking students to design their own experiment","By describing an octopus's typical diet"],
+        correct:1, why:"The lecture closes with the puzzle of why short-lived solitary animals would evolve high intelligence, and offers predation pressure as a leading hypothesis." }
+    ]
+  },
+
+  { id:3, type:"lecture", topic:"Astronomy", title:"The Aurora Borealis",
+    transcript:[
+      {sp:"Professor", text:"The aurora borealis — the northern lights — is one of the few astronomical phenomena visible to the naked eye that's actually happening in our own atmosphere, not in deep space. So today let's unpack what's really going on up there."},
+      {sp:"Professor", text:"It begins ninety-three million miles away, on the Sun. The Sun's surface continuously throws off charged particles — electrons and protons — in what we call the solar wind. This wind reaches Earth in two to four days."},
+      {sp:"Professor", text:"Now, Earth has a magnetic field, generated by the convection of liquid iron in the outer core. That field deflects most of the solar wind. But near the magnetic poles, the field lines dip down into the atmosphere, and charged particles get funneled along them."},
+      {sp:"Professor", text:"Around eighty to three hundred kilometers above the surface, those incoming particles collide with atoms of oxygen and nitrogen. The collision excites the atoms — kicks their electrons into higher energy states. When those electrons fall back down, they release the extra energy as light."},
+      {sp:"Professor", text:"And the color depends on which atom is excited and at what altitude. Oxygen at lower altitudes — say, a hundred kilometers — emits green light, the most common aurora color. Higher up, around two hundred kilometers, oxygen produces red. Nitrogen tends to give blue or purple."},
+      {sp:"Professor", text:"So why don't we see auroras every night? Two reasons. First, the solar wind isn't constant — its intensity follows the eleven-year solar cycle. During solar maximum, auroras can extend much farther from the poles. The famous 1859 Carrington Event lit up auroras as far south as the Caribbean. Second, you need clear, dark skies. Light pollution and clouds wash the display out."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What does the professor mainly discuss?",
+        options:["Why Earth has a magnetic field","The physical causes and characteristics of the aurora borealis","Methods for predicting solar storms","The history of aurora research in Scandinavia"],
+        correct:1, why:"The lecture works through the chain of cause and effect: solar wind → magnetic field → atmospheric collisions → light, which is the central topic." },
+      { type:"detail", q:"How long does the solar wind take to reach Earth?",
+        options:["A few minutes","Two to four hours","Two to four days","Two to four weeks"],
+        correct:2, why:"The professor explicitly states \"this wind reaches Earth in two to four days.\"" },
+      { type:"detail", q:"At approximately what altitude does oxygen produce the green color most commonly seen in auroras?",
+        options:["About 50 kilometers","About 100 kilometers","About 200 kilometers","About 500 kilometers"],
+        correct:1, why:"The professor says oxygen at \"a hundred kilometers\" emits green light." },
+      { type:"function", q:"Why does the professor mention the 1859 Carrington Event?",
+        options:["To show how dangerous solar storms can be to satellites","To illustrate how far auroras can extend during solar maximum","To explain how the aurora was first scientifically named","To prove that auroras happen on other planets too"],
+        correct:1, why:"The Carrington Event is cited as an example of auroras extending unusually far from the poles during a strong solar event." },
+      { type:"inference", q:"What can be inferred about why aurora colors vary?",
+        options:["They depend on the time of year","They depend on which atmospheric gas is excited and at what altitude","They depend on the observer's latitude","They depend on weather conditions"],
+        correct:1, why:"The professor explains different colors arise from different atoms (oxygen vs. nitrogen) excited at different altitudes." }
+    ]
+  },
+
+  { id:4, type:"conversation", topic:"Daily Life", title:"At the Library Reference Desk",
+    transcript:[
+      {sp:"Student", text:"Hi, I was wondering if you could help me. I'm writing a paper on labor strikes in the 1880s and the database I'm using only goes back to 1990."},
+      {sp:"Librarian", text:"That's a common problem. Most full-text databases are recent. For nineteenth-century material you'll want digitized newspaper archives. Have you tried Chronicling America?"},
+      {sp:"Student", text:"I haven't even heard of it."},
+      {sp:"Librarian", text:"It's free, run by the Library of Congress. Millions of newspaper pages from the 1700s to the 1960s. You can search by keyword and date. For your topic — say, the Haymarket affair — you'd find dozens of contemporaneous accounts."},
+      {sp:"Student", text:"That sounds perfect. But how do I cite a newspaper article from 1886?"},
+      {sp:"Librarian", text:"Use the Chicago style guide — it has a specific format for historical newspapers. Your professor probably specified a citation style on the syllabus."},
+      {sp:"Student", text:"She did, yeah, MLA. So Chicago might not work."},
+      {sp:"Librarian", text:"MLA handles historical sources too. The key elements are the same: name of paper, date, page if available, and the URL of the digital archive. I can print you a quick reference sheet."},
+      {sp:"Student", text:"That would be great. Also — can I get scans of microfilm if Chronicling America doesn't have what I need?"},
+      {sp:"Librarian", text:"Yes, our interlibrary loan office handles that. Submit a request at least two weeks before your deadline. Microfilm scans take time."},
+      {sp:"Student", text:"Two weeks? My paper's due in three. I'd better submit something today just in case."},
+      {sp:"Librarian", text:"Smart. And don't forget — primary sources are great, but you'll also need secondary scholarship. The America: History and Life database covers historical journals."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What is the main reason the student approaches the librarian?",
+        options:["To return overdue books","To get help finding nineteenth-century sources","To complain about a database","To learn how to use the printer"],
+        correct:1, why:"The student opens with the problem that a current database doesn't cover the 1880s, and the conversation centers on finding period sources." },
+      { type:"detail", q:"What is Chronicling America?",
+        options:["A subscription database from a private company","A free Library of Congress newspaper archive","A textbook on American labor history","A scholarly journal"],
+        correct:1, why:"The librarian describes it as \"free, run by the Library of Congress.\"" },
+      { type:"detail", q:"How far in advance should the student submit an interlibrary loan request for microfilm scans?",
+        options:["A few days","One week","At least two weeks","At least one month"],
+        correct:2, why:"The librarian says \"submit a request at least two weeks before your deadline.\"" },
+      { type:"function", q:"Why does the librarian mention America: History and Life?",
+        options:["To suggest a way to find secondary scholarship","To recommend a substitute for Chronicling America","To explain the citation format","To direct the student to a different department"],
+        correct:0, why:"The librarian raises this database after noting the student will need \"secondary scholarship\" in addition to primary sources." },
+      { type:"inference", q:"What can be inferred about the student's planning so far?",
+        options:["He has been working on the paper for months","He has not yet started looking for primary sources","He has already finished a complete draft","He plans to drop the assignment"],
+        correct:1, why:"He didn't know about the main free archive for his period and his deadline is only three weeks away, suggesting he is just beginning his source search." }
+    ]
+  },
+
+  { id:5, type:"lecture", topic:"Psychology", title:"Memory Consolidation During Sleep",
+    transcript:[
+      {sp:"Professor", text:"For a long time we treated sleep as a kind of empty parenthesis in cognition — the brain shuts down, you wake up, end of story. The last thirty years of research have completely overturned that view."},
+      {sp:"Professor", text:"We now know sleep is when the brain does some of its most important computational work. Specifically, sleep is when memories are consolidated — stabilized, integrated, and pruned."},
+      {sp:"Professor", text:"Let's break that down. There are two broad sleep stages relevant here: slow-wave sleep, which dominates the early part of the night, and REM sleep, which dominates later. Both contribute, but in different ways."},
+      {sp:"Professor", text:"Slow-wave sleep handles what we call declarative memory — facts, events, things you can put into words. During slow-wave sleep, the hippocampus replays patterns of activity from the day, and these patterns are gradually transferred to the neocortex for long-term storage. It's like moving files from short-term to long-term storage."},
+      {sp:"Professor", text:"REM sleep, on the other hand, seems to favor procedural memory — skills, motor patterns, and crucially, emotional processing. Studies show people who sleep after learning a new piano sequence perform measurably better the next day than people who stay awake the same number of hours. The improvement happens during sleep."},
+      {sp:"Professor", text:"Now, here's a finding that surprised even the researchers: sleep also actively forgets. Not all memories should be kept. During slow-wave sleep, weak or redundant connections are pruned away. This is sometimes called synaptic downscaling — the brain reduces overall synaptic strength to make room for tomorrow's learning."},
+      {sp:"Professor", text:"The practical implication is significant. Pulling an all-nighter before an exam is doubly bad. You don't just learn poorly when you're tired — you also lose the consolidation window that would normally lock in what you studied earlier in the week."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What is the lecture mainly about?",
+        options:["Why people dream","How sleep consolidates memory","The dangers of insomnia","Differences between human and animal sleep"],
+        correct:1, why:"The professor's central claim is that sleep performs memory consolidation, and the lecture works through how this happens." },
+      { type:"detail", q:"According to the professor, slow-wave sleep is most important for which type of memory?",
+        options:["Procedural memory","Declarative memory","Sensory memory","Working memory"],
+        correct:1, why:"The professor says slow-wave sleep handles \"declarative memory — facts, events, things you can put into words.\"" },
+      { type:"function", q:"Why does the professor describe a piano-learning experiment?",
+        options:["To prove that REM sleep aids procedural memory","To argue that musicians need more sleep than others","To compare humans to other primates","To show that sleep alone is enough to learn a skill"],
+        correct:0, why:"The piano example illustrates that REM sleep — which favors procedural memory — produces measurable improvement in motor skill." },
+      { type:"detail", q:"What is synaptic downscaling?",
+        options:["A reduction in REM sleep duration with age","The pruning of weak or redundant neural connections during slow-wave sleep","A type of memory disorder","A method for treating insomnia"],
+        correct:1, why:"The professor defines synaptic downscaling as the reduction of weak/redundant connections during slow-wave sleep." },
+      { type:"inference", q:"What does the professor imply about pulling all-nighters before an exam?",
+        options:["They are an effective last-minute study technique","They damage memory in two ways: poor learning and lost consolidation","They are only harmful if done multiple nights in a row","They should be combined with caffeine"],
+        correct:1, why:"The professor explicitly calls all-nighters \"doubly bad\": new learning is impaired and consolidation of earlier studying is lost." }
+    ]
+  },
+
+  { id:6, type:"conversation", topic:"Daily Life", title:"Career Center: Internship Choices",
+    transcript:[
+      {sp:"Student", text:"Hi, I have an offer from two summer internships and I really can't decide which to take."},
+      {sp:"Advisor", text:"Okay, let's hear them. What's option one?"},
+      {sp:"Student", text:"A big consulting firm in New York. They're paying really well — like, the highest summer salary I've ever seen. But the work is mostly making slides and doing market research."},
+      {sp:"Advisor", text:"And option two?"},
+      {sp:"Student", text:"A small environmental nonprofit in Seattle. They want me to help design a public-engagement campaign for a watershed restoration project. The pay is about a quarter of the consulting one."},
+      {sp:"Advisor", text:"What does your gut say?"},
+      {sp:"Student", text:"That's the thing — my gut says Seattle, but my parents say New York. They're worried about loans."},
+      {sp:"Advisor", text:"That's a real concern. Let me ask a different question. After graduation, what kind of work do you actually want?"},
+      {sp:"Student", text:"Honestly? Something at the intersection of policy and the environment. I don't really see myself in finance or consulting long-term."},
+      {sp:"Advisor", text:"Then think about which internship will give you skills and contacts that match where you want to go. The consulting role will look impressive on a résumé, but the campaign experience will give you concrete deliverables you can show in an environmental policy interview."},
+      {sp:"Student", text:"What about the loan situation, though?"},
+      {sp:"Advisor", text:"That's a question for financial aid, not for me. But ask yourself — would the consulting money meaningfully change your loan picture, or just make this summer more comfortable? If it's the latter, the trade-off may not be worth it."},
+      {sp:"Student", text:"Yeah, you're right. It would maybe cover one semester's interest, not the principal."}
+    ],
+    questions:[
+      { type:"main_idea", q:"Why has the student come to the career center?",
+        options:["To search for new internships","To decide between two internship offers","To complain about a low-paying offer","To withdraw an application"],
+        correct:1, why:"The student says he has \"an offer from two summer internships and I really can't decide which to take.\"" },
+      { type:"detail", q:"What is the main task at the consulting firm?",
+        options:["Designing a watershed campaign","Making slides and doing market research","Auditing financial reports","Tutoring junior employees"],
+        correct:1, why:"The student says the consulting work is \"mostly making slides and doing market research.\"" },
+      { type:"function", q:"Why does the advisor ask the student about post-graduation goals?",
+        options:["To encourage the student to apply to graduate school","To redirect the student to financial aid","To frame the internship choice in terms of long-term career fit","To suggest a different internship entirely"],
+        correct:2, why:"The advisor uses the long-term goal to shift the decision criterion from short-term pay to skill and résumé alignment with where the student wants to go." },
+      { type:"attitude", q:"What is the advisor's view on the financial concern?",
+        options:["It is irrelevant","It is the most important factor","It is real but should be examined carefully","It can be solved by getting another job"],
+        correct:2, why:"The advisor calls it \"a real concern\" but reframes it by asking whether the extra money would actually change the loan picture." },
+      { type:"inference", q:"What is implied about the student's likely decision?",
+        options:["He will probably accept the consulting offer","He is leaning toward the Seattle nonprofit","He will reject both offers","He will try to negotiate higher pay in Seattle"],
+        correct:1, why:"His gut already says Seattle, his career goals favor it, and by the end he acknowledges the consulting money is not as decisive as he thought." }
+    ]
+  },
+
+  { id:7, type:"lecture", topic:"Geology", title:"Plate Tectonics and Continental Drift",
+    transcript:[
+      {sp:"Professor", text:"Today we're going to revisit one of the great paradigm shifts in twentieth-century science: the theory of plate tectonics. To understand why it was such a revolution, you have to remember that for most of geology's history, continents were assumed to be permanent fixtures."},
+      {sp:"Professor", text:"In 1912, a German meteorologist named Alfred Wegener proposed that the continents had once been joined into a single supercontinent he called Pangaea, and had since drifted apart. His evidence was striking. The coastlines of South America and Africa fit together like puzzle pieces. Identical fossils — both plant and animal — appeared on continents now separated by oceans. Glacial deposits matched up across continents that today are in completely different climates."},
+      {sp:"Professor", text:"And yet Wegener's theory was rejected for nearly fifty years. Why? Because he could not explain a mechanism. He had no good answer to the question: what force could possibly push entire continents around? Geophysicists at the time considered the idea preposterous."},
+      {sp:"Professor", text:"The breakthrough came in the 1950s and 60s, with two pieces of evidence that hadn't been available to Wegener. First, mapping of the ocean floor revealed mid-ocean ridges — long, volcanically active mountain chains running through every ocean basin. Second, and more decisively, scientists discovered magnetic striping. The basalt that erupts at these ridges records Earth's magnetic field as it cools. By measuring these magnetic patterns, researchers showed that new oceanic crust is created at the ridges and spreads outward, slowly pushing continents apart."},
+      {sp:"Professor", text:"This was the missing mechanism. Continents don't plow through the ocean — they ride on giant plates of crust, and the plates themselves are pushed and pulled by convection in the mantle below. Wegener was vindicated, posthumously."},
+      {sp:"Professor", text:"The lesson here is methodological as much as scientific. A theory can be correct, supported by impressive observational evidence, and still rejected for decades because it lacks a plausible mechanism. Scientific change often waits not for new ideas, but for new instruments capable of revealing new evidence."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What is the lecture mainly about?",
+        options:["The discovery of mid-ocean ridges","How continental drift was proposed, rejected, and eventually accepted","Wegener's biography","The magnetic field of Earth"],
+        correct:1, why:"The lecture traces the arc of plate tectonics from Wegener's 1912 proposal through fifty years of rejection to mid-twentieth-century vindication." },
+      { type:"detail", q:"Who first proposed continental drift?",
+        options:["A British physicist","A German meteorologist named Alfred Wegener","An American geophysicist in the 1960s","A team of marine biologists"],
+        correct:1, why:"The professor names \"a German meteorologist named Alfred Wegener\" as the original proposer in 1912." },
+      { type:"detail", q:"Which kinds of evidence did Wegener originally cite for continental drift? Choose the answer that best summarizes them.",
+        options:["Coastline shape, matching fossils, and matching glacial deposits","Magnetic striping on the ocean floor","Volcanic activity at mid-ocean ridges","Convection cells in the mantle"],
+        correct:0, why:"The professor lists Wegener's three key pieces of evidence: matching coastlines, matching fossils, and matching glacial deposits." },
+      { type:"function", q:"Why does the professor explain why Wegener's theory was rejected?",
+        options:["To criticize the geophysicists of the time","To show that scientific acceptance often depends on having a plausible mechanism, not just observations","To suggest the original evidence was weak","To argue that Wegener was actually wrong"],
+        correct:1, why:"The professor explicitly draws the methodological lesson at the end: a theory needs a plausible mechanism to be accepted, no matter how good the observational evidence is." },
+      { type:"inference", q:"What does the professor imply about the role of new instruments in scientific revolutions?",
+        options:["They are less important than new ideas","They often supply the evidence that finally vindicates earlier ideas","They tend to confuse rather than clarify","They are only useful in physics"],
+        correct:1, why:"The closing remark — \"scientific change often waits not for new ideas, but for new instruments\" — directly states this implication." }
+    ]
+  },
+
+  { id:8, type:"conversation", topic:"Daily Life", title:"Booking a Music Practice Room",
+    transcript:[
+      {sp:"Student", text:"Hi, I need a practice room for tomorrow afternoon. Specifically one with a piano."},
+      {sp:"Receptionist", text:"What time and how long?"},
+      {sp:"Student", text:"Two to four. I have a juried recital next week and I really need uninterrupted time."},
+      {sp:"Receptionist", text:"Hmm. I can give you Room 14 from two to three, or Room 22 from three to four. The two o'clock slot in 22 is taken."},
+      {sp:"Student", text:"Could I do both? Move from 14 to 22 at three?"},
+      {sp:"Receptionist", text:"Technically yes, but the pianos are different. Room 14 is a Steinway upright. Room 22 is a Yamaha grand. Switching mid-session might throw you off."},
+      {sp:"Student", text:"Oh — definitely the grand, then. My recital piece needs the dynamic range. Can I take 22 from three to four and just give up the earlier slot?"},
+      {sp:"Receptionist", text:"Sure. But heads up — there's a master class in the recital hall from one to three tomorrow, and the practice rooms get crowded right after. If you don't show by three-fifteen, the system auto-releases the booking."},
+      {sp:"Student", text:"Is there any way to extend? An hour might not be enough."},
+      {sp:"Receptionist", text:"Booking maximum is two hours per day for students. But if Room 22 is still empty at four, you can ask in person — we sometimes allow walk-in extensions when there's no waitlist."},
+      {sp:"Student", text:"Got it. One more thing — do I need to bring my own metronome? I can't remember if the rooms have them."},
+      {sp:"Receptionist", text:"Most rooms have a digital metronome on top of the piano. If 22's is broken — sometimes happens — there's a backup at the front desk you can sign out."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What is the student trying to do?",
+        options:["Sign up for piano lessons","Book a practice room with a piano","Cancel an existing reservation","Apply for a recital slot"],
+        correct:1, why:"The student opens with \"I need a practice room for tomorrow afternoon. Specifically one with a piano.\"" },
+      { type:"detail", q:"Why does the student decide to take only Room 22?",
+        options:["Room 14 was already booked","The pianos in the two rooms are different and switching could be disruptive","Room 14 doesn't have a piano","Room 22 is closer to the recital hall"],
+        correct:1, why:"The receptionist warns that the rooms have different pianos and switching mid-session could throw the student off." },
+      { type:"detail", q:"What happens if the student does not arrive by 3:15?",
+        options:["A late fee is charged","The system auto-releases the booking","The recital hall takes over the room","The reservation is moved to Room 14"],
+        correct:1, why:"The receptionist says \"if you don't show by three-fifteen, the system auto-releases the booking.\"" },
+      { type:"function", q:"Why does the receptionist mention walk-in extensions?",
+        options:["To warn the student that no extensions are allowed","To explain that an extension might be possible if no one else needs the room","To recommend a longer reservation in advance","To direct the student to a different department"],
+        correct:1, why:"The receptionist offers walk-in extensions as a possible workaround if the room is still free at four o'clock." },
+      { type:"inference", q:"What can be inferred about the student's recital piece?",
+        options:["It is short and simple","It requires a wide range of dynamic expression","It is for voice, not piano","It does not require a metronome"],
+        correct:1, why:"The student says the piece \"needs the dynamic range,\" which is why he prefers the grand piano over the upright." }
+    ]
+  },
+
+  { id:9, type:"lecture", topic:"Art History", title:"Linear Perspective in the Renaissance",
+    transcript:[
+      {sp:"Professor", text:"Today let's talk about one of the most consequential technical developments in Western art: linear perspective. Before the early fifteenth century, paintings represented depth in stylized, often inconsistent ways. Figures might be sized by importance rather than by distance. Architectural backgrounds rarely matched up."},
+      {sp:"Professor", text:"The breakthrough is usually credited to Filippo Brunelleschi, the Florentine architect, around 1413. Brunelleschi worked out the geometric rules by which a three-dimensional space can be projected onto a flat surface so it appears mathematically convincing. The famous demonstration involved a small painted panel of the Florence Baptistery and a mirror — viewers looked through a peephole and saw the painting reflected, indistinguishable from the real building behind them."},
+      {sp:"Professor", text:"The key concepts are simple in description but powerful in effect. There is a single vanishing point, usually placed on the horizon line. Parallel lines receding into the distance — like the edges of a tiled floor — converge at that point. Objects of equal real-world size appear smaller as they recede. The system was codified in Leon Battista Alberti's 1435 treatise *De Pictura*, which made it teachable."},
+      {sp:"Professor", text:"Within a generation, painters across Italy were applying these rules. Masaccio's *Holy Trinity* in Florence, painted around 1427, is often called the first complete masterpiece of linear perspective — the chapel ceiling appears to recede deep into the wall, when in fact the surface is flat."},
+      {sp:"Professor", text:"But here's a question that's worth dwelling on: did linear perspective make painting more realistic, or merely more rule-governed? Some art historians argue that perspective is itself a convention — it represents space as seen from a single, fixed, motionless eye, which is not how human vision actually works. We have two eyes, we move our heads, our attention shifts. Perspective freezes a vantage point that doesn't really exist."},
+      {sp:"Professor", text:"This critique gained force in the late nineteenth and twentieth centuries, when modernist painters — Cézanne, the Cubists — began deliberately violating perspective to capture something closer to lived visual experience. So linear perspective, far from being the natural endpoint of realism, turns out to be one historically specific way of organizing visual space."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What is the lecture mainly about?",
+        options:["The biography of Filippo Brunelleschi","The development of linear perspective and questions about its status","The rivalry between Florentine and Venetian painters","Modern Cubist painting"],
+        correct:1, why:"The lecture covers how linear perspective was developed and codified, then closes with the question of whether it is genuinely realistic." },
+      { type:"detail", q:"Whose 1435 treatise codified the rules of linear perspective?",
+        options:["Filippo Brunelleschi","Leon Battista Alberti","Masaccio","Paul Cézanne"],
+        correct:1, why:"The professor says the system was \"codified in Leon Battista Alberti's 1435 treatise *De Pictura*.\"" },
+      { type:"function", q:"Why does the professor describe Brunelleschi's mirror demonstration?",
+        options:["To show how perspective drawings could be tested for accuracy","To prove that paintings can replace real buildings","To give an example of an early failed experiment","To compare painting to sculpture"],
+        correct:0, why:"The mirror demonstration is presented as evidence that Brunelleschi's geometric rules produced a result indistinguishable from the real building." },
+      { type:"detail", q:"Which painting does the professor cite as the first complete masterpiece of linear perspective?",
+        options:["Brunelleschi's panel of the Baptistery","Masaccio's *Holy Trinity*","Alberti's *De Pictura*","A work by Cézanne"],
+        correct:1, why:"The professor says Masaccio's *Holy Trinity*, c. 1427, \"is often called the first complete masterpiece of linear perspective.\"" },
+      { type:"attitude", q:"What is the professor's overall stance on linear perspective?",
+        options:["It is the natural endpoint of artistic realism","It is one historically specific convention, not a neutral window onto reality","It was a mistake that modernists later corrected","It is only relevant to architecture, not painting"],
+        correct:1, why:"The professor explicitly concludes that perspective is \"one historically specific way of organizing visual space,\" not a natural endpoint." }
+    ]
+  },
+
+  { id:10, type:"lecture", topic:"Environment", title:"Why Coral Reefs Are Vanishing",
+    transcript:[
+      {sp:"Professor", text:"Coral reefs cover less than one percent of the ocean floor. But they shelter roughly a quarter of all known marine species. They also protect coastlines from storms, support hundreds of millions of people through fishing and tourism, and yield compounds we use in medicine. By any measure, they are one of the most valuable ecosystems on Earth — and they are collapsing."},
+      {sp:"Professor", text:"Let's clarify what a coral actually is. A coral is a colony of tiny animals called polyps. Each polyp builds a calcium-carbonate skeleton, and over thousands of years these skeletons accumulate into the structures we call reefs. But the polyps don't live alone. Inside their tissues are microscopic algae called zooxanthellae. These algae photosynthesize and supply most of the coral's energy. In return, the coral provides shelter and the nitrogen-rich waste the algae need."},
+      {sp:"Professor", text:"This partnership — what biologists call a mutualism — is exquisitely sensitive to temperature. When ocean water gets just one or two degrees Celsius warmer than the coral's normal range, the relationship breaks down. The coral expels the algae. Without them, the coral loses its color and its main food source. This is bleaching."},
+      {sp:"Professor", text:"A bleached coral isn't dead — yet. If the water cools quickly, the algae can return. But if heat stress lasts more than a few weeks, the coral starves. We've seen this play out at planetary scale. The 2014 to 2017 global bleaching event was the longest on record, affecting reefs on every continent. The Great Barrier Reef alone lost roughly half its coral cover."},
+      {sp:"Professor", text:"There are other threats — ocean acidification from CO₂, agricultural runoff, destructive fishing practices, disease outbreaks — but warming is the dominant driver. And here's the difficult truth: even under the most optimistic emissions scenarios, scientists estimate we will lose seventy to ninety percent of tropical reefs by mid-century."},
+      {sp:"Professor", text:"That doesn't mean conservation is futile. Reefs in cooler, more shaded, or genetically resilient locations have higher survival odds. Restoration projects are propagating heat-tolerant coral strains. But realistically, we are not preserving reefs as they were — we are managing a transition to a much-diminished version."}
+    ],
+    questions:[
+      { type:"main_idea", q:"What is the lecture mainly about?",
+        options:["The marine species that depend on coral reefs","Why coral reefs are declining and the prospects for their survival","The chemistry of ocean acidification","Methods for breeding heat-tolerant coral"],
+        correct:1, why:"The lecture builds a causal account of reef decline and ends with a sober assessment of what conservation can and cannot do." },
+      { type:"detail", q:"What are zooxanthellae?",
+        options:["A species of small fish that live among reefs","Microscopic algae that live inside coral tissues","Calcium-carbonate skeletons","A type of bleaching event"],
+        correct:1, why:"The professor introduces zooxanthellae as \"microscopic algae\" living inside coral tissues that supply most of the coral's energy via photosynthesis." },
+      { type:"detail", q:"What is bleaching?",
+        options:["The accumulation of calcium-carbonate skeletons","The expulsion of algae from coral due to heat stress","A method used in reef restoration","A disease unique to the Great Barrier Reef"],
+        correct:1, why:"The professor defines bleaching as the breakdown of the coral-algae partnership when water becomes too warm, causing the coral to expel the algae and lose its color." },
+      { type:"function", q:"Why does the professor mention the 2014–2017 global bleaching event?",
+        options:["To show that bleaching has become a planetary-scale phenomenon","To prove that bleached coral can never recover","To recommend a specific conservation policy","To introduce a different definition of bleaching"],
+        correct:0, why:"The 2014–2017 event is cited as evidence that bleaching now happens at planetary scale, with the Great Barrier Reef losing about half its coral cover." },
+      { type:"attitude", q:"What is the professor's overall outlook for tropical reefs?",
+        options:["Optimistic — current technology will likely save them","Pessimistic but not defeatist — major losses are likely, but managed transition is possible","Indifferent — reefs are not as important as other ecosystems","Confident that reducing emissions alone will be enough"],
+        correct:1, why:"The professor projects 70–90% loss by mid-century under optimistic scenarios but argues conservation still matters as a managed transition rather than a rescue." }
+    ]
+  },
+
+];
+
+/* =============================================================
+   STATE
+   ============================================================= */
+let currentPassage = null;
+let currentQuestionIdx = 0;
+let userAnswers = []; // {selected, correct}
+let utteranceHandle = null;
+let audioStartTs = 0;
+let audioInterval = null;
+let estimatedAudioMs = 0;
+let pendingTimeouts = [];
+
+/* =============================================================
+   PERSISTENCE — best score per passage
+   ============================================================= */
+const BEST_KEY = 'toefl_la_best_scores';
+function getAllBest() {
+  try { return JSON.parse(localStorage.getItem(BEST_KEY) || '{}'); }
+  catch { return {}; }
+}
+function getBest(passageId) {
+  return getAllBest()[passageId] || null;
+}
+function saveBest(passageId, correct, total) {
+  const all = getAllBest();
+  const pct = Math.round((correct/total)*100);
+  const prev = all[passageId];
+  if (!prev || pct > prev.pct) {
+    all[passageId] = { correct, total, pct, date: new Date().toISOString() };
+    localStorage.setItem(BEST_KEY, JSON.stringify(all));
+    return { isNew: true, prevPct: prev ? prev.pct : null };
+  }
+  return { isNew: false, prevPct: prev.pct };
+}
+
+/* =============================================================
+   HOME — passage list
+   ============================================================= */
+function buildHome() {
+  // Populate topic filter
+  const topics = [...new Set(PASSAGES.map(p => p.topic))].sort();
+  const tf = document.getElementById('topicFilter');
+  tf.innerHTML = '<option value="">All topics</option>' +
+    topics.map(t => `<option value="${t}">${t}</option>`).join('');
+  renderGrid();
+  document.getElementById('search').addEventListener('input', renderGrid);
+  document.getElementById('typeFilter').addEventListener('change', renderGrid);
+  document.getElementById('topicFilter').addEventListener('change', renderGrid);
+}
+
+function renderGrid() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  const tf = document.getElementById('typeFilter').value;
+  const topicF = document.getElementById('topicFilter').value;
+  const filtered = PASSAGES.filter(p => {
+    if (tf && p.type !== tf) return false;
+    if (topicF && p.topic !== topicF) return false;
+    if (q && !(p.title.toLowerCase().includes(q) || p.topic.toLowerCase().includes(q))) return false;
+    return true;
+  });
+  const grid = document.getElementById('passageGrid');
+  document.getElementById('emptyHint').style.display = filtered.length ? 'none' : 'block';
+  grid.innerHTML = filtered.map(p => {
+    const best = getBest(p.id);
+    let bestHtml = '';
+    if (best) {
+      const c = best.pct >= 80 ? '#16a34a' : best.pct >= 60 ? '#f59e0b' : '#dc2626';
+      bestHtml = `<span class="best" style="color:${c}">★ ${best.correct}/${best.total}</span>`;
+    } else {
+      bestHtml = `<span class="best" style="color:var(--text-sec)">Not attempted</span>`;
+    }
+    return `
+      <div class="p-card" onclick="openPassage(${p.id})">
+        <div class="top">
+          <span class="p-type ${p.type}">${p.type}</span>
+          ${bestHtml}
+        </div>
+        <h3>${p.title}</h3>
+        <div class="topic">${p.topic}</div>
+        <div class="meta">
+          <span>${p.questions.length} questions</span>
+          <span>~${estimateAudioSeconds(p)}s audio</span>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function estimateAudioSeconds(p) {
+  // ~155 words/min for natural TTS pacing
+  const words = p.transcript.reduce((s, line) => s + line.text.split(/\s+/).length, 0);
+  return Math.round(words / 155 * 60);
+}
+
+/* =============================================================
+   FLOW: open → listen → questions → results
+   ============================================================= */
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function openPassage(id) {
+  currentPassage = PASSAGES.find(p => p.id === id);
+  if (!currentPassage) return;
+  document.getElementById('introType').textContent = currentPassage.type.toUpperCase();
+  document.getElementById('introTitle').textContent = currentPassage.title;
+  document.getElementById('introTopic').textContent = `Topic: ${currentPassage.topic}`;
+  showScreen('screenIntro');
+}
+
+function startListening() {
+  document.getElementById('listenType').textContent = currentPassage.type.toUpperCase();
+  document.getElementById('listenTitle').textContent = currentPassage.title;
+  showScreen('screenListen');
+
+  // Build the full audio script. For conversation, alternate "voices" by
+  // pitch shift; for lecture, single voice.
+  estimatedAudioMs = estimateAudioSeconds(currentPassage) * 1000;
+  audioStartTs = Date.now();
+  document.getElementById('audioTotal').textContent = formatTime(estimatedAudioMs/1000);
+
+  // Track progress visually
+  if (audioInterval) clearInterval(audioInterval);
+  audioInterval = setInterval(() => {
+    const elapsed = Date.now() - audioStartTs;
+    const frac = Math.min(1, elapsed / estimatedAudioMs);
+    document.getElementById('audioFill').style.width = (frac*100) + '%';
+    document.getElementById('audioElapsed').textContent = formatTime(elapsed/1000);
+  }, 200);
+
+  // Speak each line in sequence
+  speechSynthesis.cancel();
+  speakSequence(currentPassage.transcript, 0);
+}
+
+function speakSequence(lines, idx) {
+  if (idx >= lines.length) {
+    // Done
+    if (audioInterval) { clearInterval(audioInterval); audioInterval = null; }
+    document.getElementById('audioFill').style.width = '100%';
+    pendingTimeouts.push(setTimeout(() => beginQuestions(), 800));
+    return;
+  }
+  const line = lines[idx];
+  const utt = new SpeechSynthesisUtterance(line.text);
+  utt.rate = 0.95;
+  utt.volume = 1;
+  // Voice variation for conversations
+  if (currentPassage.type === 'conversation') {
+    utt.pitch = (line.sp === 'Student' || line.sp === 'Customer') ? 1.05 : 0.92;
+  } else {
+    utt.pitch = 1;
+  }
+  // Pick a voice if available
+  const voices = speechSynthesis.getVoices();
+  const enVoices = voices.filter(v => /^en[-_]/i.test(v.lang));
+  if (enVoices.length) {
+    if (currentPassage.type === 'conversation') {
+      const isStudent = (line.sp === 'Student' || line.sp === 'Customer');
+      // Pick alternating voices if possible
+      const idxV = isStudent ? 0 : Math.min(1, enVoices.length - 1);
+      utt.voice = enVoices[idxV];
+    } else {
+      utt.voice = enVoices[0];
+    }
+  }
+  utt.onend = () => speakSequence(lines, idx + 1);
+  utt.onerror = () => speakSequence(lines, idx + 1);
+  utteranceHandle = utt;
+  speechSynthesis.speak(utt);
+}
+
+function abortListening() {
+  speechSynthesis.cancel();
+  if (audioInterval) { clearInterval(audioInterval); audioInterval = null; }
+  pendingTimeouts.forEach(t => clearTimeout(t));
+  pendingTimeouts = [];
+  goHome();
+}
+
+function beginQuestions() {
+  currentQuestionIdx = 0;
+  userAnswers = [];
+  document.getElementById('qPassageTitle').textContent = currentPassage.title;
+  document.getElementById('qTotal').textContent = currentPassage.questions.length;
+  showQuestion();
+  showScreen('screenQuestion');
+}
+
+function showQuestion() {
+  const q = currentPassage.questions[currentQuestionIdx];
+  document.getElementById('qNum').textContent = currentQuestionIdx + 1;
+  document.getElementById('qFill').style.width =
+    ((currentQuestionIdx) / currentPassage.questions.length * 100) + '%';
+  document.getElementById('qTypeBadge').textContent = qTypeLabel(q.type);
+  document.getElementById('questionText').textContent = q.q;
+  const box = document.getElementById('optionsBox');
+  box.innerHTML = q.options.map((opt, i) =>
+    `<div class="opt" data-idx="${i}" onclick="selectOption(${i})">
+       <span class="opt-letter">${String.fromCharCode(65+i)}.</span>
+       <span class="opt-text">${opt}</span>
+     </div>`
+  ).join('');
+  document.getElementById('explanationBox').classList.remove('show');
+  document.getElementById('explanationBox').textContent = '';
+  document.getElementById('btnNext').disabled = true;
+  document.getElementById('btnNext').textContent =
+    currentQuestionIdx === currentPassage.questions.length - 1 ? 'Finish' : 'Next';
+}
+
+function qTypeLabel(t) {
+  return ({
+    main_idea: 'Main Idea',
+    detail: 'Detail',
+    function: 'Function',
+    inference: 'Inference',
+    attitude: 'Attitude',
+    organization: 'Organization'
+  })[t] || t;
+}
+
+function selectOption(idx) {
+  const q = currentPassage.questions[currentQuestionIdx];
+  if (userAnswers[currentQuestionIdx]) return; // already answered
+  userAnswers[currentQuestionIdx] = { selected: idx, correct: idx === q.correct };
+  // Reveal correct/incorrect immediately
+  document.querySelectorAll('#optionsBox .opt').forEach(el => {
+    const i = parseInt(el.dataset.idx, 10);
+    el.style.cursor = 'default';
+    el.onclick = null;
+    if (i === q.correct) el.classList.add('correct');
+    else if (i === idx) el.classList.add('incorrect');
+  });
+  const exp = document.getElementById('explanationBox');
+  exp.textContent = q.why;
+  exp.classList.add('show');
+  document.getElementById('btnNext').disabled = false;
+}
+
+function nextQuestion() {
+  if (currentQuestionIdx < currentPassage.questions.length - 1) {
+    currentQuestionIdx++;
+    showQuestion();
+  } else {
+    showResults();
+  }
+}
+
+function showResults() {
+  const total = currentPassage.questions.length;
+  const correct = userAnswers.filter(a => a && a.correct).length;
+  const pct = Math.round((correct/total)*100);
+  const pctClass = pct >= 80 ? 'good' : pct >= 60 ? 'fair' : 'poor';
+
+  document.getElementById('resultTitle').textContent = currentPassage.title;
+  const score = document.getElementById('resultScore');
+  score.textContent = `${correct}/${total}`;
+  score.className = `score-big ${pctClass}`;
+  document.getElementById('resultPct').textContent = `${pct}% correct`;
+
+  const bestResult = saveBest(currentPassage.id, correct, total);
+  const bb = document.getElementById('bestBanner');
+  if (bestResult.isNew) {
+    bb.className = 'best-banner new';
+    bb.textContent = bestResult.prevPct !== null
+      ? `★ New personal best! (Previous: ${bestResult.prevPct}%)`
+      : `★ Score saved as your personal best!`;
+  } else {
+    bb.className = 'best-banner';
+    bb.textContent = `Your best on this passage: ${bestResult.prevPct}%`;
+  }
+
+  // Per-question review
+  const review = document.getElementById('reviewList');
+  review.innerHTML = '<h3 style="text-align:left;font-size:14px;margin:18px 0 8px;color:var(--text-sec);text-transform:uppercase;letter-spacing:0.5px">Review</h3>' +
+    currentPassage.questions.map((q, i) => {
+      const ans = userAnswers[i];
+      const ok = ans && ans.correct;
+      const yourLetter = ans ? String.fromCharCode(65 + ans.selected) : '—';
+      const yourText = ans ? q.options[ans.selected] : '(no answer)';
+      const correctLetter = String.fromCharCode(65 + q.correct);
+      const correctText = q.options[q.correct];
+      return `<div class="review-item ${ok ? 'correct' : 'incorrect'}">
+        <div class="qline">${ok ? '✓' : '✗'} Q${i+1}. ${q.q}</div>
+        <div class="ans"><strong>Your answer:</strong> ${yourLetter}. ${yourText}</div>
+        ${ok ? '' : `<div class="ans"><strong>Correct:</strong> ${correctLetter}. ${correctText}</div>`}
+        <div class="why"><strong>Why:</strong> ${q.why}</div>
+      </div>`;
+    }).join('');
+
+  // Build transcript
+  document.getElementById('transcriptBox').innerHTML =
+    currentPassage.transcript.map(line =>
+      `<p style="margin-bottom:8px"><span class="speaker">${line.sp}:</span> ${line.text}</p>`
+    ).join('');
+  document.getElementById('transcriptBox').classList.remove('show');
+  document.getElementById('transcriptBtn').textContent = 'Show transcript';
+
+  showScreen('screenResult');
+}
+
+function toggleTranscript() {
+  const box = document.getElementById('transcriptBox');
+  const btn = document.getElementById('transcriptBtn');
+  if (box.classList.contains('show')) {
+    box.classList.remove('show');
+    btn.textContent = 'Show transcript';
+  } else {
+    box.classList.add('show');
+    btn.textContent = 'Hide transcript';
+  }
+}
+
+function retryPassage() {
+  if (!currentPassage) return goHome();
+  openPassage(currentPassage.id);
+}
+
+function nextPassage() {
+  if (!currentPassage) return goHome();
+  const idx = PASSAGES.findIndex(p => p.id === currentPassage.id);
+  const next = PASSAGES[(idx + 1) % PASSAGES.length];
+  openPassage(next.id);
+}
+
+function goHome() {
+  speechSynthesis.cancel();
+  if (audioInterval) { clearInterval(audioInterval); audioInterval = null; }
+  pendingTimeouts.forEach(t => clearTimeout(t));
+  pendingTimeouts = [];
+  currentPassage = null;
+  renderGrid(); // refresh best scores
+  showScreen('screenHome');
+}
+
+function formatTime(seconds) {
+  const m = Math.floor(seconds / 60);
+  const s = Math.floor(seconds % 60);
+  return `${m}:${String(s).padStart(2, '0')}`;
+}
+
+/* =============================================================
+   INIT
+   ============================================================= */
+window.addEventListener('DOMContentLoaded', () => {
+  buildHome();
+  // Prime voices (Chrome lazy-loads them)
+  if (speechSynthesis.getVoices().length === 0) {
+    speechSynthesis.onvoiceschanged = () => {
+      // no-op — voices will be there when we need them
+    };
+  }
+});
+
+// If user navigates away mid-listen, kill the synthesis
+window.addEventListener('beforeunload', () => speechSynthesis.cancel());
+window.addEventListener('pagehide', () => speechSynthesis.cancel());
+</script>
+</body>
+</html>

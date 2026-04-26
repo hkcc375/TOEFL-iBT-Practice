@@ -139,6 +139,7 @@
   .section-card.speaking::after { background: linear-gradient(90deg, #2563eb, #7c3aed); }
   .section-card.writing::after { background: linear-gradient(90deg, #f59e0b, #ef4444); }
   .section-card.reading::after { background: linear-gradient(90deg, #059669, #0891b2); }
+  .section-card.listening::after { background: linear-gradient(90deg, #1e40af, #7c3aed); }
 
   .section-icon {
     width: 56px;
@@ -154,6 +155,7 @@
   .section-card.speaking .section-icon { background: #ede9fe; }
   .section-card.writing .section-icon { background: #fef3c7; }
   .section-card.reading .section-icon { background: #d1fae5; }
+  .section-card.listening .section-icon { background: #dbeafe; }
 
   .section-card h2 {
     font-size: 20px;
@@ -315,6 +317,30 @@
       </div>
     </a>
 
+    <!-- Listen & Answer Questions -->
+    <a href="listen-and-answer.html" class="section-card listening">
+      <div class="section-icon">🎙️</div>
+      <h2>Listen &amp; Answer</h2>
+      <p class="desc">Hear an academic lecture or campus conversation, then answer 5 comprehension questions. New TOEFL iBT 2026 listening task.</p>
+      <div class="meta">
+        <span class="tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+          Listening
+        </span>
+        <span class="tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/></svg>
+          10 Passages
+        </span>
+        <span class="tag">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          5 Qs each
+        </span>
+      </div>
+      <div class="arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+      </div>
+    </a>
+
     <!-- Complete the Words -->
     <a href="complete-the-words.html" class="section-card reading">
       <div class="section-icon">📖</div>
@@ -370,19 +396,19 @@
   <div class="info-grid">
     <div class="info-card">
       <div class="num">252</div>
-      <div class="label">Listen & Repeat Sentences</div>
+      <div class="label">Listen &amp; Repeat Sentences</div>
     </div>
     <div class="info-card">
-      <div class="num">100</div>
+      <div class="num">10</div>
+      <div class="label">Listen &amp; Answer Passages</div>
+    </div>
+    <div class="info-card">
+      <div class="num">200</div>
       <div class="label">Complete the Words Passages</div>
     </div>
     <div class="info-card">
       <div class="num">411</div>
       <div class="label">Build a Sentence Questions</div>
-    </div>
-    <div class="info-card">
-      <div class="num">3</div>
-      <div class="label">TOEFL 2026 Section Types</div>
     </div>
   </div>
 
@@ -394,7 +420,7 @@
       <div style="width:36px;height:36px;border-radius:50%;background:#ede9fe;display:flex;align-items:center;justify-content:center;font-weight:700;color:#7c3aed;font-size:14px;flex-shrink:0">1</div>
       <div>
         <h3 style="font-size:15px;margin-bottom:4px">Choose a Section</h3>
-        <p style="font-size:13px;color:var(--text-sec);line-height:1.5">Pick <strong>Listen & Repeat</strong> for speaking, <strong>Complete the Words</strong> for reading/vocabulary, or <strong>Build a Sentence</strong> for writing/grammar.</p>
+        <p style="font-size:13px;color:var(--text-sec);line-height:1.5">Pick <strong>Listen &amp; Repeat</strong> for speaking, <strong>Listen &amp; Answer</strong> for listening comprehension, <strong>Complete the Words</strong> for reading/vocabulary, or <strong>Build a Sentence</strong> for writing/grammar.</p>
       </div>
 
       <div style="width:36px;height:36px;border-radius:50%;background:#dbeafe;display:flex;align-items:center;justify-content:center;font-weight:700;color:#2563eb;font-size:14px;flex-shrink:0">2</div>

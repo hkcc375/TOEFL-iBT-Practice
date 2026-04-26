@@ -1411,7 +1411,136 @@ function normalizeText(t) {
     .trim();
 }
 
-function getWords(t) { return normalizeText(t).split(' ').filter(w => w.length > 0); }
+// ===== Recognizer-tolerance maps =====
+// Browser speech-to-text often returns digits ("2" instead of "two"), British
+// spelling ("centre" instead of "center"), or a homophone of what was actually
+// said ("to" instead of "two"). Both the expected sentence and the spoken
+// transcript pass through canonicalizeWord() so equivalent forms compare equal.
+
+const UK_TO_US_SPELLING = {
+  centre:'center', centres:'centers', centred:'centered', centring:'centering',
+  colour:'color', colours:'colors', coloured:'colored', colouring:'coloring',
+  favourite:'favorite', favourites:'favorites', favour:'favor', favours:'favors',
+  organise:'organize', organised:'organized', organising:'organizing',
+  organisation:'organization', organisations:'organizations',
+  realise:'realize', realised:'realized', realising:'realizing',
+  recognise:'recognize', recognised:'recognized', recognising:'recognizing',
+  analyse:'analyze', analysed:'analyzed', analysing:'analyzing',
+  behaviour:'behavior', behaviours:'behaviors',
+  harbour:'harbor', harbours:'harbors',
+  honour:'honor', honours:'honors', honoured:'honored',
+  labour:'labor', labours:'labors',
+  neighbour:'neighbor', neighbours:'neighbors', neighbourhood:'neighborhood',
+  programme:'program', programmes:'programs',
+  traveller:'traveler', travellers:'travelers',
+  travelling:'traveling', travelled:'traveled',
+  theatre:'theater', theatres:'theaters',
+  metre:'meter', metres:'meters',
+  litre:'liter', litres:'liters',
+  fibre:'fiber', fibres:'fibers',
+  defence:'defense', offence:'offense', licence:'license', practise:'practice',
+  aluminium:'aluminum',
+  catalogue:'catalog', catalogues:'catalogs',
+  dialogue:'dialog', dialogues:'dialogs',
+  grey:'gray',
+  manoeuvre:'maneuver', manoeuvres:'maneuvers',
+  cheque:'check', cheques:'checks',
+  storey:'story', storeys:'stories',
+  enquire:'inquire', enquired:'inquired', enquiry:'inquiry', enquiries:'inquiries',
+  jewellery:'jewelry',
+  modelling:'modeling', modelled:'modeled',
+  cancelled:'canceled', cancelling:'canceling',
+  whilst:'while', amongst:'among',
+  speciality:'specialty', specialities:'specialties',
+  paediatric:'pediatric', oesophagus:'esophagus',
+};
+
+// Map every member of a homophone group to one canonical form. Speech recognizers
+// frequently confuse these because they sound identical — the user hears the
+// audio, so penalizing the spelling distinction would be unfair.
+const HOMOPHONE_CANONICAL = {
+  to:'two', too:'two', two:'two',
+  there:'there', their:'there', "they're":'there',
+  your:'your', "you're":'your',
+  its:'its', "it's":'its',
+  whose:'whose', "who's":'whose',
+  here:'here', hear:'here',
+  for:'for', four:'for', fore:'for',
+  one:'one', won:'one',
+  ate:'eight', eight:'eight',
+  new:'new', knew:'new',
+  no:'no', know:'no',
+  buy:'buy', by:'buy', bye:'buy',
+  meet:'meet', meat:'meet',
+  week:'week', weak:'week',
+  pair:'pair', pear:'pair', pare:'pair',
+  break:'break', brake:'break',
+  way:'way', weigh:'way',
+  hour:'hour', our:'hour',
+  night:'night', knight:'night',
+  scene:'scene', seen:'scene',
+  see:'see', sea:'see',
+  wait:'wait', weight:'wait',
+  whether:'whether', weather:'whether',
+  flower:'flower', flour:'flower',
+  son:'son', sun:'son',
+  red:'red', read:'red',
+  right:'right', write:'right',
+  cite:'sight', site:'sight', sight:'sight',
+  rose:'rose', rows:'rose',
+  bear:'bear', bare:'bear',
+  cell:'cell', sell:'cell',
+  mail:'mail', male:'mail',
+  plain:'plain', plane:'plain',
+  principal:'principle', principle:'principle',
+  rain:'rain', reign:'rain', rein:'rain',
+  steal:'steel', steel:'steel',
+  toe:'tow', tow:'tow',
+  threw:'through', through:'through',
+};
+
+const DIGIT_WORDS_ONES = ['zero','one','two','three','four','five','six','seven','eight','nine'];
+const DIGIT_WORDS_TEENS = ['ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+const DIGIT_WORDS_TENS = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+
+function digitsToWords(numStr) {
+  const n = parseInt(numStr, 10);
+  if (isNaN(n) || n < 0 || n > 999) return null;
+  if (n < 10) return DIGIT_WORDS_ONES[n];
+  if (n < 20) return DIGIT_WORDS_TEENS[n-10];
+  if (n < 100) {
+    const t = Math.floor(n/10), o = n%10;
+    return o ? DIGIT_WORDS_TENS[t] + ' ' + DIGIT_WORDS_ONES[o] : DIGIT_WORDS_TENS[t];
+  }
+  const h = Math.floor(n/100), rest = n%100;
+  let s = DIGIT_WORDS_ONES[h] + ' hundred';
+  if (rest) s += ' ' + digitsToWords(String(rest));
+  return s;
+}
+
+function canonicalizeWord(w) {
+  if (/^\d+$/.test(w)) {
+    const wd = digitsToWords(w);
+    if (wd) return wd; // may contain a space — getWords will re-split
+  }
+  if (UK_TO_US_SPELLING[w]) return UK_TO_US_SPELLING[w];
+  if (HOMOPHONE_CANONICAL[w]) return HOMOPHONE_CANONICAL[w];
+  return w;
+}
+
+function getWords(t) {
+  const tokens = normalizeText(t).split(' ').filter(w => w.length > 0);
+  const out = [];
+  for (const tok of tokens) {
+    const c = canonicalizeWord(tok);
+    if (c.indexOf(' ') !== -1) {
+      for (const sub of c.split(' ')) if (sub) out.push(sub);
+    } else {
+      out.push(c);
+    }
+  }
+  return out;
+}
 
 // Levenshtein distance on word arrays
 function wordEditDistance(a, b) {

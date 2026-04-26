@@ -146,6 +146,7 @@
     </div>
     <div id="reportBtnWrap" style="display:none;margin-top:8px">
       <button class="btn btn-success" onclick="showReport()" style="width:100%">View Session Report</button>
+      <button class="btn" onclick="lrClearAndReset()" style="width:100%;margin-top:6px;background:#fee2e2;color:#991b1b;font-size:12px">Clear All Past Recordings</button>
     </div>
   </div>
 
@@ -780,6 +781,8 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('speedValue').textContent = e.target.value + 'x';
   });
   speechSynthesis.onvoiceschanged = populateVoices;
+  // Restore audio recordings + scores from previous tab sessions.
+  lrRestorePastSessions();
 });
 
 function buildScenarioGrid() {
@@ -818,6 +821,120 @@ let recognitionActive = false;   // track whether recognition is running
 let recognitionError = '';       // last error for diagnostics
 let recognitionStopping = false; // set when we are intentionally winding down — suppresses auto-restart
 let recognitionFlushResolve = null; // resolve fn for waitForRecognitionFlush()
+
+// ===================================================================
+// PERSISTENCE — IndexedDB
+// ===================================================================
+// Each evaluated sentence (and skipped entry) is written to IndexedDB so the
+// audio Blob and its score survive a tab reload. localStorage isn't used
+// because it can't hold binary data and is capped at ~5MB; IndexedDB handles
+// blobs natively and offers tens of MB of quota.
+const LR_DB_NAME = 'toefl_lr_recordings';
+const LR_DB_VERSION = 1;
+const LR_STORE = 'recordings';
+
+function lrOpenDB() {
+  return new Promise((resolve, reject) => {
+    if (!window.indexedDB) { reject(new Error('IndexedDB not supported')); return; }
+    const req = indexedDB.open(LR_DB_NAME, LR_DB_VERSION);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(LR_STORE)) {
+        const store = db.createObjectStore(LR_STORE, { keyPath: 'id', autoIncrement: true });
+        store.createIndex('timestamp', 'timestamp');
+      }
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+async function lrPersist(record) {
+  try {
+    const db = await lrOpenDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(LR_STORE, 'readwrite');
+      const req = tx.objectStore(LR_STORE).add(record);
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror = e => reject(e.target.error);
+    });
+  } catch (e) {
+    console.warn('[Listen&Repeat] Could not persist recording:', e.message || e);
+    return null;
+  }
+}
+
+async function lrLoadAll() {
+  try {
+    const db = await lrOpenDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(LR_STORE, 'readonly');
+      const req = tx.objectStore(LR_STORE).getAll();
+      req.onsuccess = e => resolve(e.target.result || []);
+      req.onerror = e => reject(e.target.error);
+    });
+  } catch (e) {
+    console.warn('[Listen&Repeat] Could not load past recordings:', e.message || e);
+    return [];
+  }
+}
+
+async function lrClearAll() {
+  try {
+    const db = await lrOpenDB();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(LR_STORE, 'readwrite');
+      const req = tx.objectStore(LR_STORE).clear();
+      req.onsuccess = () => resolve();
+      req.onerror = e => reject(e.target.error);
+    });
+  } catch (e) {
+    console.warn('[Listen&Repeat] Could not clear recordings:', e.message || e);
+  }
+}
+
+// Restore past sessions into sessionResults at page load. Does NOT touch
+// scenarioResults (that array is per-scenario and stays empty until the user
+// starts one).
+async function lrRestorePastSessions() {
+  const records = await lrLoadAll();
+  records.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+  for (const rec of records) {
+    const audioUrl = rec.audioBlob ? URL.createObjectURL(rec.audioBlob) : null;
+    sessionResults.push({
+      scenario: rec.scenario,
+      sentenceIdx: rec.sentenceIdx,
+      original: rec.original,
+      transcript: rec.transcript || '',
+      difficulty: rec.difficulty,
+      scores: rec.scores,
+      skipped: !!rec.skipped,
+      audioUrl: audioUrl,
+      dbId: rec.id,
+      timestamp: rec.timestamp,
+      _persisted: true
+    });
+  }
+  console.log('[Listen&Repeat] Restored', records.length, 'past recording(s) from IndexedDB.');
+  if (sessionResults.length) {
+    const wrap = document.getElementById('reportBtnWrap');
+    if (wrap) wrap.style.display = 'block';
+  }
+}
+
+async function lrClearAndReset() {
+  if (!confirm('Delete all past recordings? This cannot be undone.')) return;
+  await lrClearAll();
+  // Revoke object URLs to free memory
+  sessionResults.forEach(r => {
+    if (r.audioUrl) try { URL.revokeObjectURL(r.audioUrl); } catch(e) {}
+  });
+  sessionResults.length = 0;
+  // Also clear the current scenario's results to keep state consistent
+  scenarioResults.length = 0;
+  document.getElementById('reportBtnWrap').style.display = 'none';
+  alert('All past recordings have been deleted.');
+}
 
 function initSpeechRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -948,9 +1065,10 @@ function confirmQuit() {
 async function startScenario(idx) {
   currentScenario = idx;
   currentSentenceIdx = 0;
-  // Revoke object URLs from any previous scenario before clearing the array,
-  // otherwise we leak the recorded audio blobs in memory.
-  scenarioResults.forEach(r => { if (r.audioUrl) try { URL.revokeObjectURL(r.audioUrl); } catch(e) {} });
+  // Don't revoke audioUrl on scenario start: those URLs are also referenced
+  // by sessionResults (and persisted) so they must remain playable in the
+  // full-session log. The browser cleans them up when the tab closes; an
+  // explicit "Clear past recordings" button handles bulk cleanup.
   scenarioResults = [];
 
   // Hide any previous warning banner
@@ -1036,9 +1154,10 @@ function nextSentence() {
 function skipSentence() {
   const sc = SCENARIOS[currentScenario];
   const sent = sc.sentences[currentSentenceIdx];
-  const skipEntry = { scenario: sc.name, sentenceIdx: currentSentenceIdx + 1, original: sent.text, transcript: '', difficulty: sent.difficulty, scores: null, skipped: true };
+  const skipEntry = { scenario: sc.name, sentenceIdx: currentSentenceIdx + 1, original: sent.text, transcript: '', difficulty: sent.difficulty, scores: null, skipped: true, timestamp: Date.now() };
   scenarioResults.push(skipEntry);
   sessionResults.push(skipEntry);
+  lrPersist({ ...skipEntry, audioBlob: null }).then(id => { if (id) skipEntry.dbId = id; });
 
   if (currentSentenceIdx >= 6) {
     showScenarioReport();
@@ -1372,12 +1491,12 @@ function evaluateSentence() {
   const scores = computeScores(original, spoken);
 
   // Capture an object-URL for the recorded audio so it can be played back
-  // from the report view. The Blob itself is held in scope by the URL until
-  // we revoke it (URLs are cleaned up in stopEverything()).
+  // from the report view. The blob itself is held by the browser's URL
+  // registry until revoked, even if the JS variable is reassigned.
   const audioUrl = recordingBlob ? URL.createObjectURL(recordingBlob) : null;
+  const blobForDb = recordingBlob; // pin the blob for the async persist call below
 
-  // Save to scenario results (for end-of-scenario report)
-  scenarioResults.push({
+  const resultRecord = {
     scenario: sc.name,
     sentenceIdx: currentSentenceIdx + 1,
     original: original,
@@ -1385,11 +1504,28 @@ function evaluateSentence() {
     difficulty: sent.difficulty,
     scores: scores,
     skipped: false,
-    audioUrl: audioUrl
-  });
+    audioUrl: audioUrl,
+    timestamp: Date.now()
+  };
 
-  // Also add to global session
-  sessionResults.push(scenarioResults[scenarioResults.length - 1]);
+  // Save to scenario results (for end-of-scenario report) and global session
+  scenarioResults.push(resultRecord);
+  sessionResults.push(resultRecord);
+
+  // Persist to IndexedDB so audio + score survive a reload
+  lrPersist({
+    scenario: resultRecord.scenario,
+    sentenceIdx: resultRecord.sentenceIdx,
+    original: resultRecord.original,
+    transcript: resultRecord.transcript,
+    difficulty: resultRecord.difficulty,
+    scores: resultRecord.scores,
+    skipped: false,
+    audioBlob: blobForDb,
+    timestamp: resultRecord.timestamp
+  }).then(id => {
+    if (id) resultRecord.dbId = id;
+  });
 
   // Show brief confirmation
   const isLast = currentSentenceIdx >= 6;

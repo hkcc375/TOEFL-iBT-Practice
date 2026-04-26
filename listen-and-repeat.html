@@ -1542,7 +1542,24 @@ function getWords(t) {
   return out;
 }
 
-// Levenshtein distance on word arrays
+// Two words are considered equivalent if they share a long common stem.
+// This lets organize/organizes/organization/organized count as the same word,
+// which is fair given that ASR routinely returns the wrong morphological form
+// of what was actually spoken (e.g. user says "organizes", recognizer hears
+// "organization"). Threshold: shared prefix ≥ 5 chars AND ≥ 70% of shorter word.
+function wordsMatch(a, b) {
+  if (a === b) return true;
+  if (!a || !b) return false;
+  if (a.length < 4 || b.length < 4) return false;
+  let p = 0;
+  const lim = Math.min(a.length, b.length);
+  while (p < lim && a[p] === b[p]) p++;
+  return p >= 5 && p / lim >= 0.7;
+}
+
+// Levenshtein distance on word arrays, with partial-cost substitutions for
+// words that aren't equal but share a stem or are character-level similar.
+// This avoids over-penalizing ASR morphological errors.
 function wordEditDistance(a, b) {
   const m = a.length, n = b.length;
   const dp = Array.from({length: m+1}, () => Array(n+1).fill(0));
@@ -1550,8 +1567,20 @@ function wordEditDistance(a, b) {
   for (let j = 0; j <= n; j++) dp[0][j] = j;
   for (let i = 1; i <= m; i++) {
     for (let j = 1; j <= n; j++) {
-      if (a[i-1] === b[j-1]) dp[i][j] = dp[i-1][j-1];
-      else dp[i][j] = 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+      let subCost;
+      if (wordsMatch(a[i-1], b[j-1])) {
+        subCost = 0;
+      } else {
+        const sim = charSimilarity(a[i-1], b[j-1]);
+        if (sim >= 0.75) subCost = 0.3;
+        else if (sim >= 0.55) subCost = 0.6;
+        else subCost = 1;
+      }
+      dp[i][j] = Math.min(
+        dp[i-1][j] + 1,
+        dp[i][j-1] + 1,
+        dp[i-1][j-1] + subCost
+      );
     }
   }
   return dp[m][n];
@@ -1598,20 +1627,23 @@ function computeScores(original, spoken) {
   else accuracyScore = 0;
 
   // ---- INTELLIGIBILITY / PRONUNCIATION ----
-  // Align words and check char-level similarity (proxy for pronunciation)
+  // Align words and check char-level similarity (proxy for pronunciation).
+  // Position-aligned char similarity rewards getting the right sound at the
+  // right place, which mirrors actual pronunciation grading.
   let totalCharSim = 0;
   let compared = 0;
   const minLen = Math.min(origWords.length, spokenWords.length);
-  // Simple alignment: compare in order up to minLen
   for (let i = 0; i < minLen; i++) {
     totalCharSim += charSimilarity(origWords[i], spokenWords[i]);
     compared++;
   }
   const avgCharSim = compared > 0 ? totalCharSim / compared : 0;
 
-  // Also count exact word matches
-  const spokenSet = new Set(spokenWords);
-  const matchedWords = origWords.filter(w => spokenSet.has(w)).length;
+  // Count word matches with stem-prefix tolerance so morphological variants
+  // (organize/organizes/organization) count as the same word.
+  const matchedWords = origWords.filter(o =>
+    spokenWords.some(s => wordsMatch(o, s))
+  ).length;
   const matchRatio = matchedWords / origWords.length;
 
   const intellRaw = (avgCharSim * 0.6 + matchRatio * 0.4);
@@ -1780,9 +1812,19 @@ function showScenarioReport() {
       const s = r.scores;
       const origWords = getWords(r.original);
       const spokenWords = getWords(r.transcript);
-      const origSet = new Set(origWords);
 
-      // Build word diff
+      // Build word diff with three states:
+      //   green  = exact word match
+      //   yellow = morphological variant or close phonetic match (counts as correct)
+      //   red    = unrelated word (likely an ASR substitution error or omission)
+      const wordStatus = (w) => {
+        for (const o of origWords) if (o === w) return 'exact';
+        for (const o of origWords) if (wordsMatch(o, w)) return 'close';
+        // Phonetic fallback — char similarity ≥ 0.7
+        for (const o of origWords) if (charSimilarity(o, w) >= 0.7) return 'close';
+        return 'wrong';
+      };
+
       let diffHtml = '<div style="margin-top:8px;font-size:12px;line-height:2">';
       diffHtml += '<div><span style="color:var(--text-sec)">Expected:</span> ' + origWords.map(w => `<span style="background:#e8f0fe;padding:1px 5px;border-radius:3px;margin:1px">${w}</span>`).join(' ') + '</div>';
       diffHtml += '<div style="margin-top:4px"><span style="color:var(--text-sec)">You said:</span> ';
@@ -1790,7 +1832,8 @@ function showScenarioReport() {
         diffHtml += '<em style="color:var(--danger)">No speech detected</em>';
       } else {
         diffHtml += spokenWords.map(w => {
-          const color = origSet.has(w) ? '#e8ffe8' : '#ffe8e8';
+          const st = wordStatus(w);
+          const color = st === 'exact' ? '#e8ffe8' : st === 'close' ? '#fff4d6' : '#ffe8e8';
           return `<span style="background:${color};padding:1px 5px;border-radius:3px;margin:1px">${w}</span>`;
         }).join(' ');
       }

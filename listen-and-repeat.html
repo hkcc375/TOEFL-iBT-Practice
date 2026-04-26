@@ -948,6 +948,9 @@ function confirmQuit() {
 async function startScenario(idx) {
   currentScenario = idx;
   currentSentenceIdx = 0;
+  // Revoke object URLs from any previous scenario before clearing the array,
+  // otherwise we leak the recorded audio blobs in memory.
+  scenarioResults.forEach(r => { if (r.audioUrl) try { URL.revokeObjectURL(r.audioUrl); } catch(e) {} });
   scenarioResults = [];
 
   // Hide any previous warning banner
@@ -1368,6 +1371,11 @@ function evaluateSentence() {
 
   const scores = computeScores(original, spoken);
 
+  // Capture an object-URL for the recorded audio so it can be played back
+  // from the report view. The Blob itself is held in scope by the URL until
+  // we revoke it (URLs are cleaned up in stopEverything()).
+  const audioUrl = recordingBlob ? URL.createObjectURL(recordingBlob) : null;
+
   // Save to scenario results (for end-of-scenario report)
   scenarioResults.push({
     scenario: sc.name,
@@ -1376,7 +1384,8 @@ function evaluateSentence() {
     transcript: spoken,
     difficulty: sent.difficulty,
     scores: scores,
-    skipped: false
+    skipped: false,
+    audioUrl: audioUrl
   });
 
   // Also add to global session
@@ -1839,6 +1848,18 @@ function showScenarioReport() {
       }
       diffHtml += '</div></div>';
 
+      // Audio playback widget for the user's recording, if we captured one.
+      let audioHtml = '';
+      if (r.audioUrl) {
+        const dlName = `sentence-${r.sentenceIdx}-${(r.scenario || 'recording').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.webm`;
+        audioHtml = `
+          <div style="margin-top:10px;padding:8px 10px;background:#f5f7fa;border-radius:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--text-sec);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Your recording</span>
+            <audio controls preload="metadata" src="${r.audioUrl}" style="flex:1;min-width:220px;height:32px"></audio>
+            <a href="${r.audioUrl}" download="${dlName}" title="Download recording" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 8px;border:1px solid var(--primary);border-radius:4px">⬇ Download</a>
+          </div>`;
+      }
+
       html += `<div class="session-item">
         <h4>Sentence ${r.sentenceIdx} <span class="sentence-difficulty" style="background:${r.difficulty==='short'?'var(--success)':r.difficulty==='medium'?'var(--primary)':'var(--orange)'}">${r.difficulty}</span></h4>
         <div class="mini-scores">
@@ -1848,6 +1869,7 @@ function showScenarioReport() {
           <span style="background:${sc2(s.fluency)}">Fluency: ${s.fluency}/5</span>
         </div>
         ${diffHtml}
+        ${audioHtml}
       </div>`;
     }
   });
@@ -1917,6 +1939,15 @@ function showReport() {
       html += `<div class="session-item"><h4>#${r.sentenceIdx} (${r.scenario}) — <span style="color:var(--text-sec)">Skipped</span></h4><div style="font-size:13px;color:var(--text-sec)">"${r.original}"</div></div>`;
     } else {
       const s = r.scores;
+      let sessAudio = '';
+      if (r.audioUrl) {
+        const dlName = `sentence-${r.sentenceIdx}-${(r.scenario || 'recording').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.webm`;
+        sessAudio = `<div style="margin-top:8px;padding:6px 8px;background:#f5f7fa;border-radius:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text-sec);font-weight:600">🎤</span>
+          <audio controls preload="metadata" src="${r.audioUrl}" style="flex:1;min-width:200px;height:30px"></audio>
+          <a href="${r.audioUrl}" download="${dlName}" style="font-size:11px;color:var(--primary);text-decoration:none">⬇</a>
+        </div>`;
+      }
       html += `<div class="session-item">
         <h4>#${r.sentenceIdx} (${r.scenario}) <span class="sentence-difficulty" style="background:${r.difficulty==='short'?'var(--success)':r.difficulty==='medium'?'var(--primary)':'var(--orange)'}">${r.difficulty}</span></h4>
         <div class="mini-scores">
@@ -1927,6 +1958,7 @@ function showReport() {
         </div>
         <div style="font-size:12px;color:var(--text-sec);margin-top:4px"><strong>Expected:</strong> "${r.original}"</div>
         <div style="font-size:12px;color:var(--text-sec)"><strong>You said:</strong> "${r.transcript || '(no speech)'}"</div>
+        ${sessAudio}
       </div>`;
     }
   });

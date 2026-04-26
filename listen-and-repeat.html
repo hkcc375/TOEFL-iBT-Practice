@@ -816,6 +816,8 @@ function initVisualizer() {
 
 let recognitionActive = false;   // track whether recognition is running
 let recognitionError = '';       // last error for diagnostics
+let recognitionStopping = false; // set when we are intentionally winding down — suppresses auto-restart
+let recognitionFlushResolve = null; // resolve fn for waitForRecognitionFlush()
 
 function initSpeechRecognition() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -869,12 +871,24 @@ function initSpeechRecognition() {
   recognition.onend = () => {
     recognitionActive = false;
     console.log('[Listen&Repeat] Speech recognition ended. Error was:', recognitionError || 'none');
-    // Auto-restart if still recording (recognition can time out)
+
+    // If we're winding down intentionally, signal flush complete and do NOT restart.
+    if (recognitionStopping) {
+      recognitionStopping = false;
+      if (recognitionFlushResolve) {
+        const fn = recognitionFlushResolve;
+        recognitionFlushResolve = null;
+        fn();
+      }
+      return;
+    }
+
+    // Auto-restart if still recording (recognition can time out for long utterances)
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       // Small delay to avoid rapid restart loops on persistent errors
       const delay = (recognitionError && recognitionError !== 'no-speech' && recognitionError !== 'aborted') ? 500 : 100;
       safeTimeout(() => {
-        if (mediaRecorder && mediaRecorder.state === 'recording') {
+        if (mediaRecorder && mediaRecorder.state === 'recording' && !recognitionStopping) {
           try {
             recognition.start();
           } catch(ex) {
@@ -1118,6 +1132,29 @@ function playPrompt() {
   speechSynthesis.speak(utt);
 }
 
+// Wait for speech recognition to flush any in-flight interim results to final.
+// Resolves when recognition.onend fires (signaling Chrome has emitted all results),
+// or after a 1500ms safety timeout — whichever comes first.
+function waitForRecognitionFlush() {
+  return new Promise(resolve => {
+    if (!recognition || !recognitionActive) {
+      resolve();
+      return;
+    }
+    let resolved = false;
+    const done = () => { if (!resolved) { resolved = true; resolve(); } };
+    recognitionStopping = true;
+    recognitionFlushResolve = done;
+    try { recognition.stop(); } catch(e) {}
+    // Safety: if onend never fires (e.g., recognition wedged), proceed anyway after 1.5s
+    safeTimeout(() => {
+      recognitionStopping = false;
+      recognitionFlushResolve = null;
+      done();
+    }, 1500);
+  });
+}
+
 // ===== RECORDING =====
 async function startRecording() {
   const sc = SCENARIOS[currentScenario];
@@ -1128,6 +1165,8 @@ async function startRecording() {
     audioChunks = [];
     finalTranscript = '';
     interimTranscript = '';
+    recognitionStopping = false;
+    recognitionFlushResolve = null;
 
     mediaRecorder = new MediaRecorder(stream);
     mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
@@ -1138,8 +1177,13 @@ async function startRecording() {
       cancelAnimationFrame(animFrame);
       resetBars();
 
-      // Silently evaluate and auto-advance
-      evaluateSentence();
+      // Wait for speech recognition to flush pending interim → final results before
+      // evaluating. Without this, long sentences often score 0/5 because evaluateSentence
+      // runs before Chrome has finalized the in-flight transcript.
+      waitForRecognitionFlush().then(() => {
+        if (quitting) return;
+        evaluateSentence();
+      });
     };
 
     mediaRecorder.start();
@@ -1201,8 +1245,10 @@ async function startRecording() {
 }
 
 function stopRecording() {
+  // Note: do NOT call recognition.stop() here. mediaRecorder.onstop will invoke
+  // waitForRecognitionFlush() which stops recognition cleanly and waits for final
+  // results before evaluating. Calling stop() here would race with that flow.
   if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-  if (recognition) try { recognition.stop(); } catch(e) {}
   clearInterval(timerInterval);
 }
 
@@ -1272,6 +1318,8 @@ function stopEverything() {
   }
   recognitionActive = false;
   recognitionError = '';
+  recognitionStopping = false;
+  recognitionFlushResolve = null;
 
   // 5. Close AudioContext (mic visualizer)
   if (audioContext) {
@@ -1309,7 +1357,14 @@ function evaluateSentence() {
   const sc = SCENARIOS[currentScenario];
   const sent = sc.sentences[currentSentenceIdx];
   const original = sent.text.trim();
-  const spoken = finalTranscript.trim();
+  // Prefer the finalized transcript. If recognition never finalized (which can happen
+  // for long utterances cut off by the timer), fall back to the interim transcript so
+  // the user gets credit for what was captured rather than seeing "No speech detected".
+  let spoken = finalTranscript.trim();
+  if (!spoken && interimTranscript.trim()) {
+    spoken = interimTranscript.trim();
+    console.log('[Listen&Repeat] Using interim transcript as fallback:', spoken);
+  }
 
   const scores = computeScores(original, spoken);
 

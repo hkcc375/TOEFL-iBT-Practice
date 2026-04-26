@@ -845,6 +845,13 @@ function initSpeechRecognition() {
   };
 
   recognition.onerror = e => {
+    // 'aborted' is benign — fired whenever we call recognition.abort() intentionally
+    // before starting a new session. 'no-speech' is also benign — just silence.
+    // Don't store these as recognitionError so they don't surface to the user.
+    if (e.error === 'aborted' || e.error === 'no-speech') {
+      console.log('[Listen&Repeat] Benign recognition event:', e.error);
+      return;
+    }
     recognitionError = e.error || 'unknown';
     console.warn('[Listen&Repeat] Speech recognition error:', e.error, e.message);
     // Show user-facing warning for actionable errors
@@ -854,8 +861,6 @@ function initSpeechRecognition() {
       showRecognitionWarning('Speech recognition requires an internet connection (Chrome sends audio to Google servers). Please check your connection.');
     } else if (e.error === 'service-not-allowed') {
       showRecognitionWarning('Speech recognition service is not allowed. Try using Chrome or Edge browser.');
-    } else if (e.error === 'no-speech') {
-      // This is normal — just means silence detected; recognition will restart via onend
     } else if (e.error === 'audio-capture') {
       showRecognitionWarning('No microphone was found, or the microphone is not working. Please check your audio input device.');
     }
@@ -867,7 +872,7 @@ function initSpeechRecognition() {
     // Auto-restart if still recording (recognition can time out)
     if (mediaRecorder && mediaRecorder.state === 'recording') {
       // Small delay to avoid rapid restart loops on persistent errors
-      const delay = (recognitionError && recognitionError !== 'no-speech') ? 500 : 100;
+      const delay = (recognitionError && recognitionError !== 'no-speech' && recognitionError !== 'aborted') ? 500 : 100;
       safeTimeout(() => {
         if (mediaRecorder && mediaRecorder.state === 'recording') {
           try {
@@ -899,7 +904,7 @@ function updateLiveTranscript() {
   const el = document.getElementById('transcriptLive');
   if (el.style.display === 'none') return;
   if (!finalTranscript && !interimTranscript) {
-    if (recognitionError && recognitionError !== 'no-speech') {
+    if (recognitionError && recognitionError !== 'no-speech' && recognitionError !== 'aborted') {
       el.innerHTML = '<span style="color:#d93025">⚠ Speech recognition error: ' + recognitionError + '</span>';
     } else if (!recognitionActive && recognition) {
       el.innerHTML = '<span class="placeholder">Starting speech recognition...</span>';

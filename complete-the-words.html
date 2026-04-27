@@ -337,6 +337,13 @@
       <button onclick="confirmClearMissed()" style="font-size:13px;padding:8px 14px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:6px;cursor:pointer">Clear All</button>
     </div>
   </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px">
+    <span style="font-family:Arial;font-size:13px;color:#475569" id="fileStatus">Not connected — using browser storage only</span>
+    <button id="connectFileBtn" onclick="connectMissedWordsFile()" style="font-size:12px;padding:6px 12px;background:#0d6efd;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-left:auto">Connect file…</button>
+    <span style="font-size:11px;color:#94a3b8;font-family:Arial;flex-basis:100%;line-height:1.4">
+      Pick a <code>.json</code> file once and every missed word will be written to it automatically. Requires Chrome or Edge. The browser remembers your choice across sessions.
+    </span>
+  </div>
   <input type="text" id="missedSearch" placeholder="Filter missed words…" style="width:100%;padding:10px 14px;font-size:14px;border:1px solid #ddd;border-radius:8px;margin-bottom:14px;font-family:Arial" oninput="renderMissedWords()">
   <div id="missedList"></div>
   <p id="missedEmpty" style="display:none;text-align:center;font-family:Arial;color:#888;padding:40px 20px;font-size:14px">
@@ -1055,11 +1062,13 @@ function addMissedWord(rec) {
   if (all.length > MAX) all.splice(0, all.length - MAX);
   setMissedWords(all);
   updateMissedBadge();
+  scheduleFileSync();
 }
 
 function clearMissedWords() {
   setMissedWords([]);
   updateMissedBadge();
+  scheduleFileSync();
 }
 
 function updateMissedBadge() {
@@ -1075,13 +1084,22 @@ function updateMissedBadge() {
   }
 }
 
-function showMissedScreen() {
+async function showMissedScreen() {
   document.getElementById("homeScreen").style.display = "none";
   document.getElementById("practiceScreen").style.display = "none";
   document.getElementById("reportScreen").style.display = "none";
   document.getElementById("missedScreen").style.display = "block";
-  renderMissedWords();
   window.scrollTo({ top: 0 });
+  // If a file is connected, treat it as the source of truth: read it and
+  // overwrite the in-memory cache so the page reflects whatever is on disk
+  // (the user may have edited the file directly between sessions).
+  await updateFileStatus();
+  const fileWords = await readMissedWordsFromFile();
+  if (fileWords !== null) {
+    setMissedWords(fileWords);
+    updateMissedBadge();
+  }
+  renderMissedWords();
 }
 
 function renderMissedWords() {
@@ -1233,6 +1251,213 @@ function relativeTime(ts) {
   const d = Math.floor(h / 24);
   if (d < 7) return d + "d ago";
   return new Date(ts).toLocaleDateString();
+}
+
+/* ============================================================
+   FILE SYSTEM ACCESS — sync missed words to a real disk file
+   ------------------------------------------------------------
+   localStorage cannot be read or edited like a regular file, so for
+   users who want a real, exportable, version-controllable record we
+   offer optional integration with the File System Access API.
+   When the user picks a .json file via showSaveFilePicker(), the
+   handle is persisted in IndexedDB and every miss writes back to
+   that file. localStorage remains the in-page cache for fast reads.
+   Browsers without the API (Firefox, Safari) gracefully fall back
+   to localStorage-only behavior.
+   ============================================================ */
+const FS_SUPPORTED = typeof window !== 'undefined' && 'showSaveFilePicker' in window;
+const FH_DB_NAME = 'toefl_ctw_filehandle';
+const FH_STORE = 'handles';
+const FH_KEY = 'missedWordsFile';
+
+function fhOpenDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(FH_DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(FH_STORE)) db.createObjectStore(FH_STORE);
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+async function saveFileHandle(handle) {
+  try {
+    const db = await fhOpenDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(FH_STORE, 'readwrite');
+      tx.objectStore(FH_STORE).put(handle, FH_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = e => reject(e.target.error);
+    });
+  } catch (e) { console.warn('saveFileHandle failed:', e); }
+}
+
+async function getStoredFileHandle() {
+  try {
+    const db = await fhOpenDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(FH_STORE, 'readonly');
+      const req = tx.objectStore(FH_STORE).get(FH_KEY);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = e => reject(e.target.error);
+    });
+  } catch { return null; }
+}
+
+async function clearStoredFileHandle() {
+  try {
+    const db = await fhOpenDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(FH_STORE, 'readwrite');
+      tx.objectStore(FH_STORE).delete(FH_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = e => reject(e.target.error);
+    });
+  } catch (e) { console.warn('clearStoredFileHandle failed:', e); }
+}
+
+// Confirm we still have permission for the handle. If the prior grant has
+// expired (e.g. after a long break), this will throw or return 'prompt' and
+// we'll need a user gesture. We try queryPermission first to avoid prompting
+// when not strictly needed.
+async function ensurePermission(handle, mode) {
+  if (!handle || !handle.queryPermission) return false;
+  const opts = { mode };
+  try {
+    if ((await handle.queryPermission(opts)) === 'granted') return true;
+    if ((await handle.requestPermission(opts)) === 'granted') return true;
+  } catch (e) { console.warn('permission check failed:', e); }
+  return false;
+}
+
+async function connectMissedWordsFile() {
+  if (!FS_SUPPORTED) {
+    alert("Your browser doesn't support direct file access (File System Access API).\n\nThis feature requires Chrome, Edge, or another Chromium-based browser. Missed words will continue to be saved in browser storage.");
+    return;
+  }
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'toefl-missed-words.json',
+      types: [{ description: 'Missed words file', accept: { 'application/json': ['.json'] } }]
+    });
+    await saveFileHandle(handle);
+    // Initial seed: try to read existing contents (so a previously synced file
+    // isn't wiped); if the file has data, merge with localStorage state.
+    const existing = await readMissedWordsFromFile();
+    if (Array.isArray(existing) && existing.length > 0) {
+      // Merge existing file with current localStorage by timestamp + word
+      const merged = mergeMissedRecords(getMissedWords(), existing);
+      setMissedWords(merged);
+    }
+    await writeMissedWordsToFile();
+    await updateFileStatus();
+    renderMissedWords();
+    alert("Connected to " + handle.name + ".\n\nFrom now on, every missed word will be written to this file automatically.");
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.warn('Connect failed:', e);
+      alert('Could not connect file: ' + (e.message || e.name));
+    }
+  }
+}
+
+function mergeMissedRecords(a, b) {
+  // De-dupe by (full + timestamp). Stable order = a then any b not in a.
+  const seen = new Set();
+  const out = [];
+  for (const r of [...a, ...b]) {
+    if (!r || !r.full) continue;
+    const key = (r.full || '') + '|' + (r.timestamp || 0);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+  }
+  out.sort((x, y) => (x.timestamp || 0) - (y.timestamp || 0));
+  return out;
+}
+
+async function disconnectMissedWordsFile() {
+  if (!confirm('Disconnect the file? Missed words will continue to be saved in browser storage but will no longer sync to disk.')) return;
+  await clearStoredFileHandle();
+  await updateFileStatus();
+}
+
+async function writeMissedWordsToFile() {
+  if (!FS_SUPPORTED) return false;
+  const handle = await getStoredFileHandle();
+  if (!handle) return false;
+  if (!await ensurePermission(handle, 'readwrite')) return false;
+  try {
+    const writable = await handle.createWritable();
+    const data = JSON.stringify(getMissedWords(), null, 2);
+    await writable.write(data);
+    await writable.close();
+    return true;
+  } catch (e) {
+    console.warn('writeMissedWordsToFile failed:', e);
+    return false;
+  }
+}
+
+async function readMissedWordsFromFile() {
+  if (!FS_SUPPORTED) return null;
+  const handle = await getStoredFileHandle();
+  if (!handle) return null;
+  if (!await ensurePermission(handle, 'read')) return null;
+  try {
+    const file = await handle.getFile();
+    const text = await file.text();
+    if (!text.trim()) return [];
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (e) {
+    console.warn('readMissedWordsFromFile failed:', e);
+    return null;
+  }
+}
+
+async function updateFileStatus() {
+  const status = document.getElementById('fileStatus');
+  const btn = document.getElementById('connectFileBtn');
+  if (!status || !btn) return;
+  if (!FS_SUPPORTED) {
+    status.innerHTML = "📦 Your browser doesn't support direct file access — using browser storage only.";
+    btn.textContent = 'Unavailable';
+    btn.disabled = true;
+    btn.style.background = '#94a3b8';
+    btn.style.cursor = 'not-allowed';
+    return;
+  }
+  const handle = await getStoredFileHandle();
+  if (handle) {
+    status.innerHTML = '📄 Synced to <b>' + escapeHtml(handle.name) + '</b>';
+    btn.textContent = 'Disconnect';
+    btn.style.background = '#fee2e2';
+    btn.style.color = '#991b1b';
+    btn.disabled = false;
+    btn.onclick = disconnectMissedWordsFile;
+  } else {
+    status.textContent = 'Not connected — using browser storage only';
+    btn.textContent = 'Connect file…';
+    btn.style.background = '#0d6efd';
+    btn.style.color = '#fff';
+    btn.disabled = false;
+    btn.onclick = connectMissedWordsFile;
+  }
+}
+
+// Debounce file syncs so submitting a passage with multiple misses doesn't
+// trigger a write per blank — we batch them all into one write.
+let _fileSyncTimer = null;
+function scheduleFileSync() {
+  if (!FS_SUPPORTED) return;
+  if (_fileSyncTimer) clearTimeout(_fileSyncTimer);
+  _fileSyncTimer = setTimeout(() => {
+    _fileSyncTimer = null;
+    writeMissedWordsToFile();
+  }, 250);
 }
 
 /* ============================================================
@@ -1625,6 +1850,24 @@ function formatTimeSec(s) {
    ============================================================ */
 renderHome();
 updateMissedBadge();
+// On boot: if a file was connected previously, try to load missed words from
+// it (silently — no permission prompt unless needed). This way the badge and
+// the page reflect on-disk state from the very first interaction.
+(async () => {
+  if (!FS_SUPPORTED) return;
+  const handle = await getStoredFileHandle();
+  if (!handle) return;
+  // Don't trigger a permission prompt here; just check if it's already granted.
+  try {
+    if ((await handle.queryPermission({ mode: 'read' })) === 'granted') {
+      const fileWords = await readMissedWordsFromFile();
+      if (fileWords !== null) {
+        setMissedWords(fileWords);
+        updateMissedBadge();
+      }
+    }
+  } catch (e) { /* ignore */ }
+})();
 </script>
 </body>
 </html>

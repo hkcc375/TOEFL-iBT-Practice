@@ -275,6 +275,7 @@
     <button class="filter-btn" data-level="medium" onclick="setFilter('medium',this)">Medium</button>
     <button class="filter-btn" data-level="hard" onclick="setFilter('hard',this)">Hard</button>
     <span class="passage-count" id="passageCount">100 passages</span>
+    <button class="filter-btn" onclick="showMissedScreen()" style="background:#fef3c7;color:#92400e;border-color:#fbbf24" id="missedBtn">📝 Missed Words <span id="missedBadge" style="display:none;background:#dc2626;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">0</span></button>
   </div>
   <div class="passage-grid" id="passageGrid"></div>
 </div>
@@ -317,6 +318,30 @@
       <button onclick="location.reload()">New Session</button>
     </div>
   </main>
+</div>
+
+<!-- ═══════════════ MISSED WORDS SCREEN ═══════════════ -->
+<div id="missedScreen" style="display:none;max-width:1100px;margin:0 auto;padding:24px 16px;">
+  <div class="home-header">
+    <h2>📝 Missed Words</h2>
+    <p>Every word you've gotten wrong in <em>Complete the Words</em>, persisted across sessions. Use this list to drill the suffixes and roots that trip you up.</p>
+  </div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;justify-content:space-between">
+    <div style="font-family:Arial;font-size:14px;color:#555">
+      <span id="missedCount">0 unique words missed</span>
+      <span id="missedTotal" style="margin-left:12px;color:#888"></span>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="secondary" onclick="goHome()" style="font-size:13px;padding:8px 14px">← Back to Menu</button>
+      <button onclick="exportMissedWords()" style="font-size:13px;padding:8px 14px;background:#0d6efd;color:#fff;border:none;border-radius:6px;cursor:pointer">⬇ Export</button>
+      <button onclick="confirmClearMissed()" style="font-size:13px;padding:8px 14px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:6px;cursor:pointer">Clear All</button>
+    </div>
+  </div>
+  <input type="text" id="missedSearch" placeholder="Filter missed words…" style="width:100%;padding:10px 14px;font-size:14px;border:1px solid #ddd;border-radius:8px;margin-bottom:14px;font-family:Arial" oninput="renderMissedWords()">
+  <div id="missedList"></div>
+  <p id="missedEmpty" style="display:none;text-align:center;font-family:Arial;color:#888;padding:40px 20px;font-size:14px">
+    No missed words yet. Once you submit a passage, any blanks you got wrong will appear here.
+  </p>
 </div>
 
 <!-- ═══════════════ EXIT MODAL ═══════════════ -->
@@ -991,6 +1016,226 @@ function getBestScore(passageId) {
 }
 
 /* ============================================================
+   MISSED WORDS (persisted in localStorage)
+   ------------------------------------------------------------
+   Schema: array of records, each with the missed word, what the
+   user typed, the source passage, and a timestamp. Multiple
+   misses of the same word are kept and shown as a count when
+   the list is grouped, so the user sees both *which* words trip
+   them up and *how often*.
+   ============================================================ */
+const MISSED_WORDS_KEY = "toefl_ctw_missed_words";
+
+function getMissedWords() {
+  try { return JSON.parse(localStorage.getItem(MISSED_WORDS_KEY) || "[]"); }
+  catch { return []; }
+}
+
+function setMissedWords(arr) {
+  try { localStorage.setItem(MISSED_WORDS_KEY, JSON.stringify(arr)); }
+  catch (e) { console.warn("Could not persist missed words:", e); }
+}
+
+function addMissedWord(rec) {
+  const all = getMissedWords();
+  all.push({
+    full: rec.full,
+    prefix: rec.prefix,
+    suffix: rec.suffix,
+    userTyped: rec.userTyped || "",
+    passageId: rec.passageId,
+    passageTitle: rec.passageTitle || "",
+    passageLevel: rec.passageLevel || "",
+    topic: rec.topic || "",
+    timestamp: Date.now()
+  });
+  // Cap to a reasonable size so localStorage never blows past quota.
+  // 5000 missed words is plenty for any realistic use; older ones get evicted FIFO.
+  const MAX = 5000;
+  if (all.length > MAX) all.splice(0, all.length - MAX);
+  setMissedWords(all);
+  updateMissedBadge();
+}
+
+function clearMissedWords() {
+  setMissedWords([]);
+  updateMissedBadge();
+}
+
+function updateMissedBadge() {
+  const all = getMissedWords();
+  const uniqueWords = new Set(all.map(r => r.full.toLowerCase()));
+  const badge = document.getElementById("missedBadge");
+  if (!badge) return;
+  if (uniqueWords.size > 0) {
+    badge.textContent = uniqueWords.size;
+    badge.style.display = "inline-block";
+  } else {
+    badge.style.display = "none";
+  }
+}
+
+function showMissedScreen() {
+  document.getElementById("homeScreen").style.display = "none";
+  document.getElementById("practiceScreen").style.display = "none";
+  document.getElementById("reportScreen").style.display = "none";
+  document.getElementById("missedScreen").style.display = "block";
+  renderMissedWords();
+  window.scrollTo({ top: 0 });
+}
+
+function renderMissedWords() {
+  const list = document.getElementById("missedList");
+  const empty = document.getElementById("missedEmpty");
+  const all = getMissedWords();
+  const filterStr = (document.getElementById("missedSearch").value || "").trim().toLowerCase();
+
+  // Group by lowercased full word, aggregate count + most recent attempt
+  const grouped = {};
+  for (const rec of all) {
+    const key = rec.full.toLowerCase();
+    if (!grouped[key]) {
+      grouped[key] = {
+        full: rec.full,
+        prefix: rec.prefix,
+        suffix: rec.suffix,
+        count: 0,
+        attempts: [],
+        lastTimestamp: 0
+      };
+    }
+    grouped[key].count++;
+    grouped[key].attempts.push(rec);
+    if (rec.timestamp > grouped[key].lastTimestamp) grouped[key].lastTimestamp = rec.timestamp;
+  }
+
+  // Filter
+  let entries = Object.values(grouped);
+  if (filterStr) {
+    entries = entries.filter(g =>
+      g.full.toLowerCase().includes(filterStr) ||
+      (g.attempts[0].topic || "").toLowerCase().includes(filterStr) ||
+      (g.attempts[0].passageTitle || "").toLowerCase().includes(filterStr)
+    );
+  }
+  // Sort: most-missed first, then most-recent
+  entries.sort((a, b) => b.count - a.count || b.lastTimestamp - a.lastTimestamp);
+
+  // Update counts in header
+  document.getElementById("missedCount").textContent =
+    Object.keys(grouped).length + " unique word" + (Object.keys(grouped).length === 1 ? "" : "s") + " missed";
+  document.getElementById("missedTotal").textContent =
+    "(" + all.length + " total miss" + (all.length === 1 ? "" : "es") + ")";
+
+  if (entries.length === 0) {
+    list.innerHTML = "";
+    empty.style.display = "block";
+    if (all.length > 0) empty.textContent = "No missed words match your filter.";
+    else empty.textContent = "No missed words yet. Once you submit a passage, any blanks you got wrong will appear here.";
+    return;
+  }
+  empty.style.display = "none";
+
+  list.innerHTML = entries.map(g => {
+    const latest = g.attempts[g.attempts.length - 1];
+    const prefixHtml = `<span style="color:#888">${escapeHtml(g.prefix)}</span><span style="color:#0d6efd;font-weight:700;background:#dbeafe;padding:1px 4px;border-radius:3px">${escapeHtml(g.suffix)}</span>`;
+    const countBadge = g.count > 1
+      ? `<span style="background:#dc2626;color:#fff;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:600;margin-left:6px">×${g.count}</span>`
+      : '';
+    // Show recent typed attempts
+    const recentTyped = [...new Set(g.attempts.map(a => a.userTyped || "(blank)").reverse())].slice(0, 3);
+    const typedHtml = recentTyped.map(t =>
+      `<code style="background:#fee2e2;color:#991b1b;padding:1px 6px;border-radius:3px;font-family:Menlo,Consolas,monospace;font-size:12px">${escapeHtml(t)}</code>`
+    ).join(' ');
+    const ago = relativeTime(g.lastTimestamp);
+    return `
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin-bottom:10px;display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+        <div style="flex:1;min-width:200px">
+          <div style="font-size:18px;font-family:Arial;margin-bottom:4px">
+            <strong>${prefixHtml}</strong>
+            ${countBadge}
+          </div>
+          <div style="font-size:12px;color:#666;font-family:Arial">
+            <span>You typed: ${typedHtml || '<em>(no entries)</em>'}</span>
+          </div>
+          <div style="font-size:11px;color:#999;font-family:Arial;margin-top:3px">
+            From "<a href="#" onclick="goToPassage(${latest.passageId});return false" style="color:#0d6efd;text-decoration:none">${escapeHtml(latest.passageTitle)}</a>" · ${escapeHtml(latest.topic)} · ${ago}
+          </div>
+        </div>
+        <div style="display:flex;gap:6px">
+          <button onclick="goToPassage(${latest.passageId})" style="font-size:12px;padding:6px 12px;background:#0d6efd;color:#fff;border:none;border-radius:6px;cursor:pointer">Practice passage</button>
+          <button onclick="removeMissedWord('${encodeURIComponent(g.full.toLowerCase())}')" style="font-size:12px;padding:6px 10px;background:#f3f4f6;color:#555;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer" title="Remove from list">✕</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeMissedWord(encodedKey) {
+  const key = decodeURIComponent(encodedKey);
+  const all = getMissedWords();
+  const filtered = all.filter(r => r.full.toLowerCase() !== key);
+  setMissedWords(filtered);
+  updateMissedBadge();
+  renderMissedWords();
+}
+
+function confirmClearMissed() {
+  if (confirm("Clear all missed words? This cannot be undone.")) {
+    clearMissedWords();
+    renderMissedWords();
+  }
+}
+
+function exportMissedWords() {
+  const all = getMissedWords();
+  if (all.length === 0) { alert("No missed words to export."); return; }
+  // Build a simple text file: one word per line, with count
+  const grouped = {};
+  for (const r of all) {
+    const k = r.full.toLowerCase();
+    grouped[k] = (grouped[k] || 0) + 1;
+  }
+  const lines = Object.entries(grouped)
+    .sort((a, b) => b[1] - a[1])
+    .map(([word, count]) => count > 1 ? `${word} (×${count})` : word);
+  const text = "Complete the Words — Missed Words\nExported: " + new Date().toISOString() + "\n\n" + lines.join("\n");
+  const blob = new Blob([text], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "missed-words-" + new Date().toISOString().slice(0, 10) + ".txt";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function goToPassage(passageId) {
+  // Hide missed screen and start the passage
+  document.getElementById("missedScreen").style.display = "none";
+  startPassage(passageId);
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function relativeTime(ts) {
+  if (!ts) return "";
+  const diff = Date.now() - ts;
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return "just now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + "m ago";
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + "h ago";
+  const d = Math.floor(h / 24);
+  if (d < 7) return d + "d ago";
+  return new Date(ts).toLocaleDateString();
+}
+
+/* ============================================================
    HOME SCREEN
    ============================================================ */
 function renderHome() {
@@ -1207,6 +1452,20 @@ function submitPassage() {
       got: b.input.value || "",
       correct: ok
     });
+
+    // If missed, log to the persistent missed-words store
+    if (!ok) {
+      addMissedWord({
+        full: b.word,
+        prefix: b.prefix,
+        suffix: b.rest,
+        userTyped: b.input.value || "",
+        passageId: passage.id,
+        passageTitle: passage.title,
+        passageLevel: passage.level,
+        topic: passage.topic
+      });
+    }
   });
 
   state.results.push({
@@ -1292,9 +1551,11 @@ function goHome() {
   clearInterval(state.timerInterval);
   document.getElementById("practiceScreen").style.display = "none";
   document.getElementById("reportScreen").style.display = "none";
+  document.getElementById("missedScreen").style.display = "none";
   document.getElementById("homeScreen").style.display = "block";
   document.getElementById("headerMeta").style.display = "none";
   document.getElementById("timer").className = "";
+  updateMissedBadge();
   renderHome();
 }
 
@@ -1363,6 +1624,7 @@ function formatTimeSec(s) {
    INIT
    ============================================================ */
 renderHome();
+updateMissedBadge();
 </script>
 </body>
 </html>

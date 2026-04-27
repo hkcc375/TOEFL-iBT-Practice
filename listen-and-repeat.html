@@ -1267,6 +1267,33 @@ function loadSentence() {
 }
 
 // ===== PLAY PROMPT (TTS) =====
+// Replay an arbitrary prompt sentence on demand (used by the report cards so
+// users can A/B their recording against what was originally spoken). Uses the
+// same voice and rate currently selected in Settings, so playback matches what
+// they heard during the live session.
+function replayPromptText(text, btn) {
+  if (!text) return;
+  // Cancel anything already speaking so users can rapid-tap between cards
+  speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text);
+  const vName = document.getElementById('voiceSelect') ? document.getElementById('voiceSelect').value : '';
+  const voices = speechSynthesis.getVoices();
+  const v = voices.find(x => x.name === vName);
+  if (v) utt.voice = v;
+  const speedEl = document.getElementById('speedRange');
+  utt.rate = speedEl ? parseFloat(speedEl.value) : 0.95;
+  utt.pitch = 1;
+  if (btn) {
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '🔊 Speaking…';
+    const restore = () => { btn.disabled = false; btn.innerHTML = orig; };
+    utt.onend = restore;
+    utt.onerror = restore;
+  }
+  speechSynthesis.speak(utt);
+}
+
 function playPrompt() {
   const sc = SCENARIOS[currentScenario];
   const sent = sc.sentences[currentSentenceIdx];
@@ -2052,15 +2079,28 @@ function showScenarioReport() {
       diffHtml += '</div></div>';
 
       // Audio playback widget for the user's recording, if we captured one.
+      // A/B comparison block: top row replays the original TTS prompt on
+      // demand (text-to-speech is regenerated identically using the saved
+      // sentence + current voice/rate), bottom row plays the user's recording.
       let audioHtml = '';
+      const promptJson = JSON.stringify(r.original || '');
+      const promptRow = `
+        <div style="margin-top:10px;padding:8px 10px;background:#eff6ff;border-left:3px solid var(--primary);border-radius:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--primary);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;min-width:88px">🔊 Original</span>
+          <span style="flex:1;font-size:13px;color:var(--text);font-style:italic">"${r.original}"</span>
+          <button onclick='replayPromptText(${promptJson}, this)' style="font-size:12px;color:#fff;background:var(--primary);border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-weight:600">▶ Play prompt</button>
+        </div>`;
       if (r.audioUrl) {
         const dlName = `sentence-${r.sentenceIdx}-${(r.scenario || 'recording').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.webm`;
-        audioHtml = `
-          <div style="margin-top:10px;padding:8px 10px;background:#f5f7fa;border-radius:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <span style="font-size:11px;color:var(--text-sec);font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Your recording</span>
+        audioHtml = promptRow + `
+          <div style="margin-top:6px;padding:8px 10px;background:#f5f7fa;border-left:3px solid #94a3b8;border-radius:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="font-size:11px;color:var(--text-sec);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;min-width:88px">🎤 You said</span>
             <audio controls preload="metadata" src="${r.audioUrl}" style="flex:1;min-width:220px;height:32px"></audio>
-            <a href="${r.audioUrl}" download="${dlName}" title="Download recording" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 8px;border:1px solid var(--primary);border-radius:4px">⬇ Download</a>
+            <a href="${r.audioUrl}" download="${dlName}" title="Download recording" style="font-size:12px;color:var(--primary);text-decoration:none;padding:4px 8px;border:1px solid var(--primary);border-radius:4px">⬇</a>
           </div>`;
+      } else {
+        // Even without a user recording, still let them replay the prompt
+        audioHtml = promptRow;
       }
 
       html += `<div class="session-item">
@@ -2143,13 +2183,20 @@ function showReport() {
     } else {
       const s = r.scores;
       let sessAudio = '';
+      const sessPromptJson = JSON.stringify(r.original || '');
+      const sessPromptRow = `<div style="margin-top:8px;padding:6px 8px;background:#eff6ff;border-left:3px solid var(--primary);border-radius:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <span style="font-size:11px;color:var(--primary);font-weight:700">🔊 Original</span>
+        <button onclick='replayPromptText(${sessPromptJson}, this)' style="flex:0 0 auto;font-size:11px;color:#fff;background:var(--primary);border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:600">▶ Play prompt</button>
+      </div>`;
       if (r.audioUrl) {
         const dlName = `sentence-${r.sentenceIdx}-${(r.scenario || 'recording').replace(/[^a-z0-9]+/gi,'-').toLowerCase()}.webm`;
-        sessAudio = `<div style="margin-top:8px;padding:6px 8px;background:#f5f7fa;border-radius:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <span style="font-size:11px;color:var(--text-sec);font-weight:600">🎤</span>
+        sessAudio = sessPromptRow + `<div style="margin-top:4px;padding:6px 8px;background:#f5f7fa;border-left:3px solid #94a3b8;border-radius:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--text-sec);font-weight:700">🎤 You said</span>
           <audio controls preload="metadata" src="${r.audioUrl}" style="flex:1;min-width:200px;height:30px"></audio>
           <a href="${r.audioUrl}" download="${dlName}" style="font-size:11px;color:var(--primary);text-decoration:none">⬇</a>
         </div>`;
+      } else {
+        sessAudio = sessPromptRow;
       }
       html += `<div class="session-item">
         <h4>#${r.sentenceIdx} (${r.scenario}) <span class="sentence-difficulty" style="background:${r.difficulty==='short'?'var(--success)':r.difficulty==='medium'?'var(--primary)':'var(--orange)'}">${r.difficulty}</span></h4>

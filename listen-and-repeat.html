@@ -2043,9 +2043,14 @@ function showScenarioReport() {
   html += '<h3 style="margin-bottom:12px;font-size:15px">Sentence-by-Sentence Breakdown</h3>';
   results.forEach((r, i) => {
     if (r.skipped) {
+      const skipPromptJson = JSON.stringify(r.original || '');
       html += `<div class="session-item">
         <h4>Sentence ${r.sentenceIdx} <span class="sentence-difficulty" style="background:var(--border);color:var(--text-sec)">${r.difficulty}</span> — <span style="color:var(--text-sec)">Skipped</span></h4>
-        <div style="font-size:13px;color:var(--text-sec);margin-top:4px">"${r.original}"</div>
+        <div style="margin-top:8px;padding:8px 10px;background:#eff6ff;border-left:3px solid var(--primary);border-radius:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--primary);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;min-width:88px">🔊 Original</span>
+          <span style="flex:1;font-size:13px;color:var(--text);font-style:italic">"${r.original}"</span>
+          <button onclick='replayPromptText(${skipPromptJson}, this)' style="font-size:12px;color:#fff;background:var(--primary);border:none;padding:5px 12px;border-radius:4px;cursor:pointer;font-weight:600">▶ Play prompt</button>
+        </div>
       </div>`;
     } else {
       const s = r.scores;
@@ -2179,7 +2184,15 @@ function showReport() {
   html += '<h3 style="margin-bottom:12px;font-size:15px">All Sentences</h3>';
   sessionResults.forEach((r) => {
     if (r.skipped) {
-      html += `<div class="session-item"><h4>#${r.sentenceIdx} (${r.scenario}) — <span style="color:var(--text-sec)">Skipped</span></h4><div style="font-size:13px;color:var(--text-sec)">"${r.original}"</div></div>`;
+      const skipSessJson = JSON.stringify(r.original || '');
+      html += `<div class="session-item">
+        <h4>#${r.sentenceIdx} (${r.scenario}) — <span style="color:var(--text-sec)">Skipped</span></h4>
+        <div style="margin-top:8px;padding:6px 8px;background:#eff6ff;border-left:3px solid var(--primary);border-radius:6px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;color:var(--primary);font-weight:700">🔊 Original</span>
+          <span style="flex:1;font-size:12px;color:var(--text);font-style:italic">"${r.original}"</span>
+          <button onclick='replayPromptText(${skipSessJson}, this)' style="font-size:11px;color:#fff;background:var(--primary);border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:600">▶ Play prompt</button>
+        </div>
+      </div>`;
     } else {
       const s = r.scores;
       let sessAudio = '';

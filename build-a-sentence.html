@@ -162,6 +162,7 @@
 <header>
   <a href="index.html" style="color:#fff;text-decoration:none;font-size:13px;opacity:.8;margin-right:12px" title="Back to Practice Hub">&larr; Home</a>
   <h1 style="flex:1">TOEFL iBT — Build a Sentence</h1>
+  <button id="mistakesBtn" onclick="showMistakesScreen()" style="margin-right:14px;background:#fef3c7;color:#92400e;border:1px solid #fbbf24;padding:6px 12px;border-radius:6px;cursor:pointer;font-size:13px;font-weight:600">📝 Mistakes <span id="mistakesBadge" style="display:none;background:#dc2626;color:#fff;border-radius:10px;padding:1px 7px;font-size:11px;margin-left:4px">0</span></button>
   <div id="timer">06:00</div>
 </header>
 
@@ -201,6 +202,36 @@
       <button class="btn-primary" id="restartBtn">Practice Again</button>
       <button class="btn-secondary" onclick="window.location.href='index.html'" style="margin-left:8px">Back to Home</button>
     </div>
+  </div>
+
+  <div id="mistakes" class="card" style="display:none">
+    <h2>📝 Mistakes</h2>
+    <p style="color:#6b7280;font-size:14px;line-height:1.5;margin-bottom:14px">
+      Every question you've answered incorrectly in <em>Build a Sentence</em>, persisted across sessions, tab closes, and browser quits. Use this list to spot patterns in the structures or word orders that trip you up.
+    </p>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;justify-content:space-between">
+      <div style="font-size:14px;color:#475569">
+        <span id="mistakesCount">0 unique questions missed</span>
+        <span id="mistakesTotal" style="margin-left:12px;color:#94a3b8"></span>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-secondary" onclick="hideMistakesScreen()" style="font-size:13px;padding:8px 14px">← Back</button>
+        <button onclick="exportMistakes()" style="font-size:13px;padding:8px 14px;background:#0d6efd;color:#fff;border:none;border-radius:6px;cursor:pointer">⬇ Export</button>
+        <button onclick="confirmClearMistakes()" style="font-size:13px;padding:8px 14px;background:#fee2e2;color:#991b1b;border:1px solid #fecaca;border-radius:6px;cursor:pointer">Clear All</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;padding:10px 14px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px">
+      <span style="font-size:13px;color:#475569" id="mistakesFileStatus">Not connected — using browser storage only</span>
+      <button id="mistakesFileBtn" style="font-size:12px;padding:6px 12px;background:#0d6efd;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-left:auto">Connect file…</button>
+      <span style="font-size:11px;color:#94a3b8;flex-basis:100%;line-height:1.4">
+        Pick a <code>.json</code> file once and every mistake will be written to it automatically. Requires Chrome or Edge. The browser remembers your choice across sessions.
+      </span>
+    </div>
+    <input type="text" id="mistakesSearch" placeholder="Filter by question or answer text…" style="width:100%;padding:10px 14px;font-size:14px;border:1px solid #ddd;border-radius:8px;margin-bottom:14px" oninput="renderMistakes()">
+    <div id="mistakesList"></div>
+    <p id="mistakesEmpty" style="display:none;text-align:center;color:#94a3b8;padding:40px 20px;font-size:14px">
+      No mistakes yet. Once you submit a wrong answer, it will appear here.
+    </p>
   </div>
 
 </div>
@@ -655,6 +686,428 @@ function resetSeen() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
+/* ============================================================
+   MISTAKES STORE — every wrong answer the user has ever submitted.
+   Persists in localStorage by default; if the user connects a real
+   .json file via the File System Access API, that file becomes the
+   source of truth.
+   Schema (one entry per submission):
+     { question, userAnswer, correctAnswer, timestamp }
+   ============================================================ */
+const MISTAKES_KEY = 'toefl_bas_mistakes';
+
+function getMistakes() {
+  try { return JSON.parse(localStorage.getItem(MISTAKES_KEY) || '[]'); }
+  catch { return []; }
+}
+
+function setMistakes(arr) {
+  try { localStorage.setItem(MISTAKES_KEY, JSON.stringify(arr)); }
+  catch (e) { console.warn('Could not persist mistakes:', e); }
+}
+
+function addMistake(rec) {
+  const all = getMistakes();
+  all.push({
+    question: rec.question || '',
+    userAnswer: rec.userAnswer || '',
+    correctAnswer: rec.correctAnswer || '',
+    timestamp: Date.now()
+  });
+  // Cap at 5000 entries; FIFO-evict older ones if we exceed quota.
+  const MAX = 5000;
+  if (all.length > MAX) all.splice(0, all.length - MAX);
+  setMistakes(all);
+  updateMistakesBadge();
+  scheduleMistakesFileSync();
+}
+
+function clearMistakes() {
+  setMistakes([]);
+  updateMistakesBadge();
+  scheduleMistakesFileSync();
+}
+
+function updateMistakesBadge() {
+  const all = getMistakes();
+  // Group by question to get unique-question count
+  const unique = new Set(all.map(r => r.question));
+  const badge = document.getElementById('mistakesBadge');
+  if (!badge) return;
+  if (unique.size > 0) {
+    badge.textContent = unique.size;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* ============================================================
+   FILE SYSTEM ACCESS — optional sync of mistakes to a real disk file
+   ============================================================ */
+const MS_FS_SUPPORTED = typeof window !== 'undefined' && 'showSaveFilePicker' in window;
+const MS_FH_DB_NAME = 'toefl_bas_filehandle';
+const MS_FH_STORE = 'handles';
+const MS_FH_KEY = 'mistakesFile';
+
+function msOpenFhDb() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(MS_FH_DB_NAME, 1);
+    req.onupgradeneeded = e => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(MS_FH_STORE)) db.createObjectStore(MS_FH_STORE);
+    };
+    req.onsuccess = e => resolve(e.target.result);
+    req.onerror = e => reject(e.target.error);
+  });
+}
+
+async function msSaveHandle(handle) {
+  try {
+    const db = await msOpenFhDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(MS_FH_STORE, 'readwrite');
+      tx.objectStore(MS_FH_STORE).put(handle, MS_FH_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = e => reject(e.target.error);
+    });
+  } catch (e) { console.warn('msSaveHandle failed:', e); }
+}
+
+async function msGetHandle() {
+  try {
+    const db = await msOpenFhDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(MS_FH_STORE, 'readonly');
+      const req = tx.objectStore(MS_FH_STORE).get(MS_FH_KEY);
+      req.onsuccess = () => resolve(req.result || null);
+      req.onerror = e => reject(e.target.error);
+    });
+  } catch { return null; }
+}
+
+async function msClearHandle() {
+  try {
+    const db = await msOpenFhDb();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction(MS_FH_STORE, 'readwrite');
+      tx.objectStore(MS_FH_STORE).delete(MS_FH_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = e => reject(e.target.error);
+    });
+  } catch (e) { console.warn('msClearHandle failed:', e); }
+}
+
+async function msEnsurePermission(handle, mode) {
+  if (!handle || !handle.queryPermission) return false;
+  const opts = { mode };
+  try {
+    if ((await handle.queryPermission(opts)) === 'granted') return true;
+    if ((await handle.requestPermission(opts)) === 'granted') return true;
+  } catch (e) { console.warn('permission check failed:', e); }
+  return false;
+}
+
+async function connectMistakesFile() {
+  if (!MS_FS_SUPPORTED) {
+    alert("Your browser doesn't support direct file access (File System Access API).\n\nThis feature requires Chrome, Edge, or another Chromium-based browser. Mistakes will continue to be saved in browser storage.");
+    return;
+  }
+  try {
+    const handle = await window.showSaveFilePicker({
+      suggestedName: 'toefl-build-a-sentence-mistakes.json',
+      types: [{ description: 'Mistakes file', accept: { 'application/json': ['.json'] } }]
+    });
+    await msSaveHandle(handle);
+    // Merge any pre-existing file content with current localStorage so we
+    // don't lose prior data if the user reconnects an old file.
+    const existing = await readMistakesFromFile();
+    if (Array.isArray(existing) && existing.length > 0) {
+      const merged = mergeMistakeRecords(getMistakes(), existing);
+      setMistakes(merged);
+    }
+    await writeMistakesToFile();
+    await updateMistakesFileStatus();
+    renderMistakes();
+    alert('Connected to ' + handle.name + '.\n\nFrom now on, every mistake will be written to this file automatically.');
+  } catch (e) {
+    if (e.name !== 'AbortError') {
+      console.warn('Connect failed:', e);
+      alert('Could not connect file: ' + (e.message || e.name));
+    }
+  }
+}
+
+function mergeMistakeRecords(a, b) {
+  const seen = new Set();
+  const out = [];
+  for (const r of [...a, ...b]) {
+    if (!r || !r.question) continue;
+    const key = (r.question || '') + '|' + (r.userAnswer || '') + '|' + (r.timestamp || 0);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+  }
+  out.sort((x, y) => (x.timestamp || 0) - (y.timestamp || 0));
+  return out;
+}
+
+async function disconnectMistakesFile() {
+  if (!confirm('Disconnect the file? Mistakes will continue to be saved in browser storage but will no longer sync to disk.')) return;
+  await msClearHandle();
+  await updateMistakesFileStatus();
+}
+
+async function writeMistakesToFile() {
+  if (!MS_FS_SUPPORTED) return false;
+  const handle = await msGetHandle();
+  if (!handle) return false;
+  if (!await msEnsurePermission(handle, 'readwrite')) return false;
+  try {
+    const writable = await handle.createWritable();
+    await writable.write(JSON.stringify(getMistakes(), null, 2));
+    await writable.close();
+    return true;
+  } catch (e) {
+    console.warn('writeMistakesToFile failed:', e);
+    return false;
+  }
+}
+
+async function readMistakesFromFile() {
+  if (!MS_FS_SUPPORTED) return null;
+  const handle = await msGetHandle();
+  if (!handle) return null;
+  if (!await msEnsurePermission(handle, 'read')) return null;
+  try {
+    const file = await handle.getFile();
+    const text = await file.text();
+    if (!text.trim()) return [];
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (e) {
+    console.warn('readMistakesFromFile failed:', e);
+    return null;
+  }
+}
+
+async function updateMistakesFileStatus() {
+  const status = document.getElementById('mistakesFileStatus');
+  const btn = document.getElementById('mistakesFileBtn');
+  if (!status || !btn) return;
+  if (!MS_FS_SUPPORTED) {
+    status.innerHTML = "📦 Your browser doesn't support direct file access — using browser storage only.";
+    btn.textContent = 'Unavailable';
+    btn.disabled = true;
+    btn.style.background = '#94a3b8';
+    btn.style.cursor = 'not-allowed';
+    return;
+  }
+  const handle = await msGetHandle();
+  if (handle) {
+    status.innerHTML = '📄 Synced to <b>' + escapeHtmlBas(handle.name) + '</b>';
+    btn.textContent = 'Disconnect';
+    btn.style.background = '#fee2e2';
+    btn.style.color = '#991b1b';
+    btn.disabled = false;
+    btn.onclick = disconnectMistakesFile;
+  } else {
+    status.textContent = 'Not connected — using browser storage only';
+    btn.textContent = 'Connect file…';
+    btn.style.background = '#0d6efd';
+    btn.style.color = '#fff';
+    btn.disabled = false;
+    btn.onclick = connectMistakesFile;
+  }
+}
+
+let _mistakesSyncTimer = null;
+function scheduleMistakesFileSync() {
+  if (!MS_FS_SUPPORTED) return;
+  if (_mistakesSyncTimer) clearTimeout(_mistakesSyncTimer);
+  _mistakesSyncTimer = setTimeout(() => {
+    _mistakesSyncTimer = null;
+    writeMistakesToFile();
+  }, 250);
+}
+
+/* ============================================================
+   MISTAKES UI
+   ============================================================ */
+let _previousScreen = 'quiz'; // remember where user came from before mistakes
+
+async function showMistakesScreen() {
+  // Track current screen so we can return there
+  if (document.getElementById('quiz').style.display !== 'none') _previousScreen = 'quiz';
+  else if (document.getElementById('report').style.display !== 'none') _previousScreen = 'report';
+  document.getElementById('quiz').style.display = 'none';
+  document.getElementById('report').style.display = 'none';
+  document.getElementById('mistakes').style.display = 'block';
+  window.scrollTo({ top: 0 });
+  await updateMistakesFileStatus();
+  // If a file is connected, treat it as the source of truth
+  const fileM = await readMistakesFromFile();
+  if (fileM !== null) {
+    setMistakes(fileM);
+    updateMistakesBadge();
+  }
+  renderMistakes();
+}
+
+function hideMistakesScreen() {
+  document.getElementById('mistakes').style.display = 'none';
+  if (_previousScreen === 'report') {
+    document.getElementById('report').style.display = 'block';
+  } else {
+    document.getElementById('quiz').style.display = 'block';
+  }
+}
+
+function renderMistakes() {
+  const list = document.getElementById('mistakesList');
+  const empty = document.getElementById('mistakesEmpty');
+  const all = getMistakes();
+  const filterStr = (document.getElementById('mistakesSearch').value || '').trim().toLowerCase();
+
+  // Group by (question + correctAnswer) so a question repeated in the pool with
+  // a different canonical answer would still show separately.
+  const grouped = {};
+  for (const r of all) {
+    const key = (r.question || '') + '||' + (r.correctAnswer || '');
+    if (!grouped[key]) {
+      grouped[key] = {
+        question: r.question,
+        correctAnswer: r.correctAnswer,
+        attempts: [],
+        lastTimestamp: 0
+      };
+    }
+    grouped[key].attempts.push(r);
+    if (r.timestamp > grouped[key].lastTimestamp) grouped[key].lastTimestamp = r.timestamp;
+  }
+
+  let entries = Object.values(grouped);
+  if (filterStr) {
+    entries = entries.filter(g =>
+      (g.question || '').toLowerCase().includes(filterStr) ||
+      (g.correctAnswer || '').toLowerCase().includes(filterStr) ||
+      g.attempts.some(a => (a.userAnswer || '').toLowerCase().includes(filterStr))
+    );
+  }
+  // Sort: most-missed first, then most-recent
+  entries.sort((a, b) => b.attempts.length - a.attempts.length || b.lastTimestamp - a.lastTimestamp);
+
+  document.getElementById('mistakesCount').textContent =
+    Object.keys(grouped).length + ' unique question' + (Object.keys(grouped).length === 1 ? '' : 's') + ' missed';
+  document.getElementById('mistakesTotal').textContent =
+    '(' + all.length + ' total mistake' + (all.length === 1 ? '' : 's') + ')';
+
+  if (entries.length === 0) {
+    list.innerHTML = '';
+    empty.style.display = 'block';
+    if (all.length > 0) empty.textContent = 'No mistakes match your filter.';
+    else empty.textContent = 'No mistakes yet. Once you submit a wrong answer, it will appear here.';
+    return;
+  }
+  empty.style.display = 'none';
+
+  list.innerHTML = entries.map(g => {
+    const countBadge = g.attempts.length > 1
+      ? `<span style="background:#dc2626;color:#fff;border-radius:10px;padding:2px 8px;font-size:11px;font-weight:600;margin-left:6px">×${g.attempts.length}</span>`
+      : '';
+    // Show up to 3 most recent unique attempts
+    const recentAttempts = [...new Set(g.attempts.map(a => a.userAnswer || '(empty)').reverse())].slice(0, 3);
+    const attemptsHtml = recentAttempts.map(t =>
+      `<div style="background:#fef2f2;color:#991b1b;padding:6px 10px;border-radius:5px;font-size:13px;margin-top:4px;border-left:3px solid #ef4444">${escapeHtmlBas(t)}</div>`
+    ).join('');
+    const ago = relativeTimeBas(g.lastTimestamp);
+    return `
+      <div style="background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:14px 18px;margin-bottom:12px">
+        <div style="display:flex;align-items:flex-start;gap:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:240px">
+            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px">Person 1 asked${countBadge}</div>
+            <div style="font-size:14px;color:#111827;margin-bottom:10px">${escapeHtmlBas(g.question)}</div>
+            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:2px">You answered</div>
+            ${attemptsHtml}
+            <div style="font-size:11px;color:#6b7280;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-top:10px;margin-bottom:2px">Correct answer</div>
+            <div style="background:#ecfdf5;color:#065f46;padding:6px 10px;border-radius:5px;font-size:13px;border-left:3px solid #10b981">${escapeHtmlBas(g.correctAnswer)}</div>
+            <div style="font-size:11px;color:#9ca3af;margin-top:8px">${ago}</div>
+          </div>
+          <button onclick="removeMistake('${encodeURIComponent(g.question)}','${encodeURIComponent(g.correctAnswer)}')" style="font-size:12px;padding:6px 10px;background:#f3f4f6;color:#555;border:1px solid #e5e7eb;border-radius:6px;cursor:pointer;flex-shrink:0" title="Remove from list">✕</button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function removeMistake(qEnc, aEnc) {
+  const q = decodeURIComponent(qEnc);
+  const a = decodeURIComponent(aEnc);
+  const all = getMistakes();
+  const filtered = all.filter(r => !(r.question === q && r.correctAnswer === a));
+  setMistakes(filtered);
+  updateMistakesBadge();
+  scheduleMistakesFileSync();
+  renderMistakes();
+}
+
+function confirmClearMistakes() {
+  if (confirm('Clear all mistakes? This cannot be undone.')) {
+    clearMistakes();
+    renderMistakes();
+  }
+}
+
+function exportMistakes() {
+  const all = getMistakes();
+  if (all.length === 0) { alert('No mistakes to export.'); return; }
+  // Build a readable text report
+  const grouped = {};
+  for (const r of all) {
+    const key = (r.question || '') + '||' + (r.correctAnswer || '');
+    if (!grouped[key]) grouped[key] = { ...r, count: 0 };
+    grouped[key].count++;
+  }
+  const lines = ['TOEFL iBT — Build a Sentence Mistakes',
+                 'Exported: ' + new Date().toISOString(),
+                 ''];
+  Object.values(grouped)
+    .sort((a, b) => b.count - a.count)
+    .forEach((g, i) => {
+      lines.push(`${i+1}. Q: ${g.question}`);
+      lines.push(`   You: ${g.userAnswer}`);
+      lines.push(`   Correct: ${g.correctAnswer}`);
+      if (g.count > 1) lines.push(`   Missed: ${g.count} times`);
+      lines.push('');
+    });
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'build-a-sentence-mistakes-' + new Date().toISOString().slice(0, 10) + '.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function escapeHtmlBas(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+
+function relativeTimeBas(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  const s = Math.floor(diff / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const d = Math.floor(h / 24);
+  if (d < 7) return d + 'd ago';
+  return new Date(ts).toLocaleDateString();
+}
+
 // Session state
 const TIME_LIMIT = 6 * 60; // 6 minutes in seconds
 let queue = [];
@@ -849,6 +1302,15 @@ submitBtn.addEventListener('click', () => {
     isCorrect,
     timeSpent
   });
+  // Persist every wrong answer to the durable mistakes store (and to the
+  // synced file if connected). Correct answers are not recorded.
+  if (!isCorrect) {
+    addMistake({
+      question: q.person1,
+      userAnswer: userWords.join(' '),
+      correctAnswer: correct.join(' ')
+    });
+  }
   markSeen(q.id);
 
   submitBtn.disabled = true;
@@ -918,6 +1380,26 @@ document.getElementById('restartBtn').addEventListener('click', () => {
 buildSession();
 startTimer();
 loadQuestion();
+
+// Initialize the mistakes badge from whatever's already in localStorage.
+updateMistakesBadge();
+// On boot: if a mistakes file was connected previously, silently try to load
+// from it (no permission prompt — only if the grant is still active). This
+// keeps the badge and list in sync with on-disk state from the first interaction.
+(async () => {
+  if (!MS_FS_SUPPORTED) return;
+  const handle = await msGetHandle();
+  if (!handle) return;
+  try {
+    if ((await handle.queryPermission({ mode: 'read' })) === 'granted') {
+      const fileM = await readMistakesFromFile();
+      if (fileM !== null) {
+        setMistakes(fileM);
+        updateMistakesBadge();
+      }
+    }
+  } catch (e) { /* ignore */ }
+})();
 </script>
 </body>
 </html>

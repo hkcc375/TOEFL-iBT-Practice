@@ -132,6 +132,26 @@
       </p>
       <div class="scenario-grid" id="scenarioGrid"></div>
     </div>
+
+    <div class="card">
+      <h2>🎯 Targeted Practice</h2>
+      <p style="color:var(--text-sec);font-size:14px;line-height:1.6;margin-bottom:14px">
+        Drill the difficulty band you struggle with most. Each session pulls
+        7 random sentences of the chosen difficulty from across <em>every</em> scenario, so the content is fresh each run.
+      </p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <button class="btn btn-primary" onclick="startDifficultyPractice('long')" style="flex:1;min-width:170px">
+          Long Sentences Only
+        </button>
+        <button class="btn" onclick="startDifficultyPractice('medium')" style="flex:1;min-width:170px;background:#dbeafe;color:#1e40af">
+          Medium Sentences Only
+        </button>
+        <button class="btn" onclick="startDifficultyPractice('short')" style="flex:1;min-width:170px;background:#dcfce7;color:#15803d">
+          Short Sentences Only
+        </button>
+      </div>
+    </div>
+
     <div class="card">
       <h2>Settings</h2>
       <div class="settings-row">
@@ -1052,6 +1072,9 @@ function showScreen(id) { document.querySelectorAll('.screen').forEach(s => s.cl
 
 function goHome() {
   stopEverything();
+  // Remove any virtual practice scenarios so the grid stays clean
+  pruneVirtualScenarios();
+  currentScenario = null;
   showScreen('screenHome');
   document.getElementById('taskCounter').textContent = '--';
   if (sessionResults.length) document.getElementById('reportBtnWrap').style.display = 'block';
@@ -1060,6 +1083,50 @@ function goHome() {
 function confirmQuit() {
   const choice = confirm('Exit this scenario?\n\nPress OK to go back to the scenario list.\n(Your progress for unfinished sentences will be lost.)');
   if (choice) goHome();
+}
+
+// Build a virtual "Practice X Sentences Only" scenario by sampling N sentences
+// of the requested difficulty from across every real scenario, then start it
+// like any other. The virtual scenario is appended to SCENARIOS and removed in
+// goHome() so it never shows up on the scenario grid.
+function startDifficultyPractice(difficulty, count) {
+  const N = count || 7;
+  // Collect every sentence of this difficulty across all real scenarios
+  const pool = [];
+  SCENARIOS.forEach(sc => {
+    if (sc._virtual) return;
+    sc.sentences.forEach(s => {
+      if (s.difficulty === difficulty) pool.push(Object.assign({}, s));
+    });
+  });
+  if (pool.length === 0) {
+    alert('No ' + difficulty + ' sentences are available.');
+    return;
+  }
+  // Shuffle and take N (or all if fewer than N exist)
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  const picked = pool.slice(0, Math.min(N, pool.length));
+  const labelMap = { short: '⚡ Short', medium: '🎯 Medium', long: '🔥 Long' };
+  const virtualScenario = {
+    name: (labelMap[difficulty] || difficulty) + ' Sentences Practice',
+    emoji: labelMap[difficulty] ? labelMap[difficulty].split(' ')[0] : '🎯',
+    desc: 'Random ' + difficulty + ' sentences from every scenario',
+    sentences: picked,
+    _virtual: true
+  };
+  SCENARIOS.push(virtualScenario);
+  startScenario(SCENARIOS.length - 1);
+}
+
+// Strip any virtual practice scenarios off the end of SCENARIOS so the grid
+// doesn't show them and indices stay stable for normal scenarios.
+function pruneVirtualScenarios() {
+  while (SCENARIOS.length && SCENARIOS[SCENARIOS.length - 1]._virtual) {
+    SCENARIOS.pop();
+  }
 }
 
 async function startScenario(idx) {
